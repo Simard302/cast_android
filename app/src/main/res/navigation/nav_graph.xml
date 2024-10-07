@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/ProcedureSelectionFragment">
+
+    <fragment
+        android:id="@+id/ProcedureSelectionFragment"
+        android:name="me.clarius.sdk.cast.example.ProcedureSelectionFragment"
+        android:label="Procedure Selection"
+        tools:layout="@layout/fragment_procedure_selection">
+        <action
+            android:id="@+id/action_ProcedureSelectionFragment_to_SlidesFragment"
+            app:destination="@id/SlidesFragment">
+            <argument
+                android:name="procedure"
+                app:argType="string" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/SlidesFragment"
+        android:name="me.clarius.sdk.cast.example.SlidesFragment"
+        android:label="Slides"
+        tools:layout="@layout/fragment_slides">
+        <argument
+            android:name="procedure"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_SlidesFragment_to_FirstFragment"
+            app:destination="@id/FirstFragment">
+            <argument
+                android:name="procedure"
+                app:argType="string" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/FirstFragment"
+        android:name="me.clarius.sdk.cast.example.FirstFragment"
+        android:label="@string/first_fragment_label"
+        tools:layout="@layout/fragment_first">
+        <argument
+            android:name="procedure"
+            app:argType="string"
+            app:nullable="false" />
+    </fragment>
+</navigation>
