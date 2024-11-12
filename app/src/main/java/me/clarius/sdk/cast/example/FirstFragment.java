@@ -42,6 +42,8 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
 import android.content.res.AssetFileDescriptor;
 
+import android.graphics.Canvas;
+
 public class FirstFragment extends Fragment {
 
     private static final String TAG = "Cast";
@@ -329,28 +331,48 @@ public class FirstFragment extends Fragment {
             tflite.run(inputTensor.getBuffer(), outputBuffer.getBuffer());
 
             // Post-process the output
-            return postprocessOutput(outputBuffer, inputImage, resizedBitmap);
+            return postprocessOutput(outputBuffer, inputImage);
         }
 
-        private Bitmap postprocessOutput(TensorBuffer outputBuffer, Bitmap originalImage, Bitmap resizedInput) {
-            int width = 128;
-            int height = 128;
-            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        private Bitmap postprocessOutput(TensorBuffer outputBuffer, Bitmap originalImage) {
+            int maskWidth = 128;
+            int maskHeight = 128;
+            int originalWidth = originalImage.getWidth();
+            int originalHeight = originalImage.getHeight();
 
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < height; y++) {
-                    float value = outputBuffer.getFloatValue(y * width + x);
-                    int originalPixel = resizedInput.getPixel(x, y);
+            // Create a bitmap for the mask
+            Bitmap maskBitmap = Bitmap.createBitmap(maskWidth, maskHeight, Bitmap.Config.ARGB_8888);
+
+            // Define a semi-transparent yellow color for the mask
+            int semiTransparentYellow = Color.argb(128, 255, 255, 0);
+
+            // Create the mask bitmap based on the outputBuffer
+            for (int x = 0; x < maskWidth; x++) {
+                for (int y = 0; y < maskHeight; y++) {
+                    float value = outputBuffer.getFloatValue(y * maskWidth + x);
                     if (value > 0.5) {
-                        bitmap.setPixel(x, y, Color.YELLOW);
+                        maskBitmap.setPixel(x, y, semiTransparentYellow);
                     } else {
-                        bitmap.setPixel(x, y, originalPixel);
+                        // Use a transparent color for areas outside the mask
+                        maskBitmap.setPixel(x, y, Color.TRANSPARENT);
                     }
                 }
             }
 
-            return Bitmap.createScaledBitmap(bitmap, originalImage.getWidth(), originalImage.getHeight(), false);
+            // Scale the mask bitmap to match the original image size
+            Bitmap scaledMask = Bitmap.createScaledBitmap(maskBitmap, originalWidth, originalHeight, false);
+
+            // Create a new bitmap to combine original image and the scaled mask
+            Bitmap combinedBitmap = Bitmap.createBitmap(originalWidth, originalHeight, Bitmap.Config.ARGB_8888);
+
+            // Draw the original image and mask overlay onto the combined bitmap
+            Canvas canvas = new Canvas(combinedBitmap);
+            canvas.drawBitmap(originalImage, 0, 0, null);
+            canvas.drawBitmap(scaledMask, 0, 0, null);
+
+            return combinedBitmap;
         }
+
 
     }
 
