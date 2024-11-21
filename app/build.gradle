@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'androidx.navigation.safeargs'
+    id 'org.jetbrains.kotlin.android'
 }
 
 android {
@@ -39,6 +40,9 @@ android {
     }
     
     namespace 'me.clarius.sdk.cast.example'
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
 }
 
 dependencies {
@@ -54,4 +58,5 @@ dependencies {
     // Add TensorFlow Lite dependency here
     implementation 'org.tensorflow:tensorflow-lite:2.13.0' // Change the version as needed
     implementation 'org.tensorflow:tensorflow-lite-support:0.4.4'
+    implementation 'androidx.core:core-ktx:1.13.0'
 }
