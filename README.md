@@ -7,6 +7,8 @@
 ## Important Notes
 
 * Set the DSL option `useLegacyPackaging = true` in the application's `build.gradle`, this ensures the native libraries are extracted and can be loaded at runtime because the current implementation does not support loading uncompressed libraries from the APK:
+* Add a `local.properties` file in the root dir of the project, with data: `sdk.dir=path/to/Android/Sdk`, example: `<user>\\AppData\\Local\\Android\\Sdk`
+* Use gradle 8.9
 
 ## Marketplace Integration
 
