@@ -15,6 +15,7 @@ import me.clarius.sdk.PosInfo
 import me.clarius.sdk.ProcessedImageInfo
 import me.clarius.sdk.RawImageInfo
 import me.clarius.sdk.SpectralImageInfo
+import me.clarius.sdk.TgcInfo
 import java.nio.ByteBuffer
 import java.util.Optional
 import java.util.concurrent.ExecutorService

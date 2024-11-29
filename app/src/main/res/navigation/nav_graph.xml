@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/ProcedureSelectionFragment"
-        android:name="me.clarius.sdk.cast.example.ProcedureSelectionFragment"
+        android:name="me.clarius.sdk.cast.example.procedure.ProcedureSelectionFragment"
         android:label="Procedure Selection"
         tools:layout="@layout/fragment_procedure_selection">
         <action
@@ -17,6 +17,12 @@
                 android:name="procedure"
                 app:argType="string" />
         </action>
+        <action
+            android:id="@+id/action_ProcedureSelectionFragment_to_FirstFragment2"
+            app:destination="@id/FirstFragment" />
+        <action
+            android:id="@+id/action_ProcedureSelectionFragment_to_overlayFragment"
+            app:destination="@id/overlayFragment" />
     </fragment>
 
     <fragment
@@ -46,4 +52,26 @@
             app:argType="string"
             app:nullable="false" />
     </fragment>
+    <fragment
+        android:id="@+id/overlayFragment"
+        android:name="me.clarius.sdk.cast.example.overlay.OverlayFragment"
+        android:label="OverlayFragment"
+        tools:layout="@layout/fragment_overlay">
+    <argument
+        android:name="procedure"
+        app:argType="string"
+        app:nullable="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_pair"
+        android:name="me.clarius.sdk.cast.example.PairDevice"
+        android:label="Pair Device"
+        tools:layout="@layout/fragment_pair">
+    </fragment>
+
+    <action
+        android:id="@+id/action_global_fragment_pair"
+        app:destination="@id/fragment_pair" />
+
 </navigation>

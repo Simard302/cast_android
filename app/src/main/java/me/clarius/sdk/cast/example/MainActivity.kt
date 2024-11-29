@@ -41,6 +41,9 @@ class MainActivity : AppCompatActivity() {
 
         if (id == R.id.action_settings) {
             return true
+        } else if (id == R.id.action_pair_device) {
+            findNavController(this, R.id.nav_host_fragment_content_main).navigate(R.id.action_global_fragment_pair)
+            return true
         }
 
         return super.onOptionsItemSelected(item)

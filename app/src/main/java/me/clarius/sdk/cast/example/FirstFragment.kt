@@ -17,6 +17,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import me.clarius.sdk.TgcInfo
+import me.clarius.sdk.BuildConfig
+import me.clarius.sdk.LineF
+import me.clarius.sdk.Platform
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiInfo
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import me.clarius.sdk.Cast
 import me.clarius.sdk.ProbeInfo
 import me.clarius.sdk.UserFunction
@@ -47,7 +55,6 @@ class FirstFragment : Fragment() {
      */
     private val castConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            Log.d(TAG, "service connected")
             // We've bound to our service, cast the IBinder now
             castBinder = service as CastBinder
 
@@ -196,6 +203,7 @@ class FirstFragment : Fragment() {
             binding!!.networkId.text
         )
         showMessage("Connecting to " + ipAddress + ":" + tcpPort.get())
+        castBinder!!.interfaceDescriptor
         castBinder!!.getCast()!!.connect(
             ipAddress, tcpPort.get(), networkId, certificate
         ) { result: Boolean, port: Int, swRevMatch: Boolean ->
