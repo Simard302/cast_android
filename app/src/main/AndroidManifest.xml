@@ -4,6 +4,7 @@
 
     <!-- INTERNET perm required to connect to network sockets -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <application
         android:allowBackup="true"
@@ -29,7 +30,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".CastService"
+        <service android:name=".clarius.CastService"
             android:enabled="true"
             android:exported="false" />
 

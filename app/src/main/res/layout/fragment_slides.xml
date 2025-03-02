@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SlidesFragment">
+    tools:context=".slides_potential_remove.SlidesFragment">
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
