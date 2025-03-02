@@ -19,7 +19,6 @@ import me.clarius.sdk.Cast
 import me.clarius.sdk.ProbeInfo
 import me.clarius.sdk.cast.example.clarius.CastService
 import me.clarius.sdk.cast.example.clarius.CastService.CastBinder
-import me.clarius.sdk.cast.example.slides_potential_remove.SlidesFragmentArgs
 import me.clarius.sdk.cast.example.databinding.FragmentOverlayBinding
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
@@ -58,9 +57,9 @@ class OverlayFragment : Fragment() {
             // Initialize tf model on service connected
             model = TfModel()
 
-            val procedure = SlidesFragmentArgs.fromBundle(arguments!!).procedure
+//            val procedure = SlidesFragmentArgs.fromBundle(arguments!!).procedure
 
-            model!!.setNewModel(procedure)
+//            model!!.setNewModel(procedure)
 
 
             // Observe the processed image LiveData
