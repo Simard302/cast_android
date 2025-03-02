@@ -1,6 +1,6 @@
 package me.clarius.sdk.cast.example.overlay
 
-import me.clarius.sdk.cast.example.CastService
+import me.clarius.sdk.cast.example.clarius.CastService
 
 class CastWrapper() {
     companion object {

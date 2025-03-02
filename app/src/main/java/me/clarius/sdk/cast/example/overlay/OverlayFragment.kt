@@ -17,12 +17,9 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import me.clarius.sdk.Cast
 import me.clarius.sdk.ProbeInfo
-import me.clarius.sdk.cast.example.CastService
-import me.clarius.sdk.cast.example.CastService.CastBinder
-import me.clarius.sdk.cast.example.FirstFragment
-import me.clarius.sdk.cast.example.FirstFragment.Companion
-import me.clarius.sdk.cast.example.R
-import me.clarius.sdk.cast.example.SlidesFragmentArgs
+import me.clarius.sdk.cast.example.clarius.CastService
+import me.clarius.sdk.cast.example.clarius.CastService.CastBinder
+import me.clarius.sdk.cast.example.slides_potential_remove.SlidesFragmentArgs
 import me.clarius.sdk.cast.example.databinding.FragmentOverlayBinding
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter

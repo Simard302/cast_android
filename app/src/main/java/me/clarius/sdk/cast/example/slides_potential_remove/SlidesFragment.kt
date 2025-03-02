@@ -1,4 +1,4 @@
-package me.clarius.sdk.cast.example
+package me.clarius.sdk.cast.example.slides_potential_remove
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,6 +11,7 @@ import androidx.viewpager2.widget.ViewPager2
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import me.clarius.sdk.cast.example.R
 
 class SlidesFragment : Fragment() {
     private var viewPager: ViewPager2? = null

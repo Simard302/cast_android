@@ -1,4 +1,4 @@
-package me.clarius.sdk.cast.example
+package me.clarius.sdk.cast.example.utils
 
 import java.util.Optional
 import java.util.function.Function

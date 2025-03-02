@@ -1,4 +1,4 @@
-package me.clarius.sdk.cast.example
+package me.clarius.sdk.cast.example.slides_potential_remove
 
 class SlideContent(// New field to represent the slide number
     val slideNumber: Int,

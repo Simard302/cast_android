@@ -1,4 +1,4 @@
-package me.clarius.sdk.cast.example
+package me.clarius.sdk.cast.example.slides_potential_remove
 
 import android.view.LayoutInflater
 import android.view.View
@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import me.clarius.sdk.cast.example.R
 
 class SlidesAdapter(private val slides: List<SlideContent>) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {

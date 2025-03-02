@@ -30,7 +30,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".CastService"
+        <service android:name=".clarius.CastService"
             android:enabled="true"
             android:exported="false" />
 

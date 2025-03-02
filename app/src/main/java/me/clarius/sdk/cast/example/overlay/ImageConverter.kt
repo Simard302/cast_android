@@ -1,4 +1,4 @@
-package me.clarius.sdk.cast.example
+package me.clarius.sdk.cast.example.overlay
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory

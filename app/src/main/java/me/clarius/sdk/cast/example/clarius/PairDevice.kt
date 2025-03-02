@@ -1,4 +1,4 @@
-package me.clarius.sdk.cast.example
+package me.clarius.sdk.cast.example.clarius
 
 import android.os.Bundle
 import android.os.Handler
@@ -11,7 +11,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import me.clarius.sdk.Cast
 import me.clarius.sdk.ProbeInfo
-import me.clarius.sdk.cast.example.CastService.CastBinder
+import me.clarius.sdk.cast.example.clarius.CastService.CastBinder
+import me.clarius.sdk.cast.example.utils.Utils
 import me.clarius.sdk.cast.example.databinding.FragmentPairBinding
 import me.clarius.sdk.cast.example.overlay.CastWrapper
 import java.nio.charset.StandardCharsets
@@ -117,16 +118,16 @@ class PairDevice : Fragment() {
             ipAddress, tcpPort.get(), networkId, certificate
         ) { result: Boolean, port: Int, swRevMatch: Boolean ->
             Log.d(
-                PairDevice.TAG,
+                TAG,
                 "Connection result: $result"
             )
             if (result) {
-                Log.d(PairDevice.TAG, "UDP stream will be on port $port")
+                Log.d(TAG, "UDP stream will be on port $port")
                 Log.d(
-                    PairDevice.TAG,
+                    TAG,
                     "App software " + (if (swRevMatch) "matches" else "does not match")
                 )
-                PairDevice.askProbeInfo(castBinder!!.getCast()!!)
+                askProbeInfo(castBinder!!.getCast()!!)
             }
         }
     }
@@ -137,20 +138,20 @@ class PairDevice : Fragment() {
         }
         castBinder!!.getCast()!!.disconnect { result: Boolean ->
             Log.d(
-                me.clarius.sdk.cast.example.PairDevice.TAG,
+                TAG,
                 "Disconnection result: $result"
             )
         }
     }
 
     private fun showError(text: CharSequence?) {
-        Log.e(PairDevice.TAG, "Error: $text")
+        Log.e(TAG, "Error: $text")
         val mainHandler = Handler(Looper.getMainLooper())
         mainHandler.post { Toast.makeText(requireContext(), text, Toast.LENGTH_SHORT).show() }
     }
 
     private fun showMessage(text: CharSequence) {
-        Log.d(PairDevice.TAG, (text as String))
+        Log.d(TAG, (text as String))
         val mainHandler = Handler(Looper.getMainLooper())
         mainHandler.post { Toast.makeText(requireContext(), text, Toast.LENGTH_SHORT).show() }
     }

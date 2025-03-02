@@ -27,7 +27,7 @@
 
     <fragment
         android:id="@+id/SlidesFragment"
-        android:name="me.clarius.sdk.cast.example.SlidesFragment"
+        android:name="me.clarius.sdk.cast.example.slides_potential_remove.SlidesFragment"
         android:label="Slides"
         tools:layout="@layout/fragment_slides">
         <argument
@@ -65,7 +65,7 @@
 
     <fragment
         android:id="@+id/fragment_pair"
-        android:name="me.clarius.sdk.cast.example.PairDevice"
+        android:name="me.clarius.sdk.cast.example.clarius.PairDevice"
         android:label="Pair Device"
         tools:layout="@layout/fragment_pair">
     </fragment>
