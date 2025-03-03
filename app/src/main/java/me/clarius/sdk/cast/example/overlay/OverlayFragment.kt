@@ -238,8 +238,6 @@ class OverlayFragment : Fragment() {
         private fun getModelFile(modelTag: String): String {
             return when (modelTag) {
                 "Transabdominal Plane Block" -> "TAP.tflite"
-                "Brachial Plexus Block" -> "BP.tflite"
-                "Femoral Nerve Block" -> "FN_All_Aug_exp1.tflite"
                 else -> "none"
             }
         }
@@ -275,7 +273,7 @@ class OverlayFragment : Fragment() {
 
         fun process(inputImage: Bitmap): Bitmap {
             // Resize the input image to match the expected input size of the model
-            val resizedBitmap = Bitmap.createScaledBitmap(inputImage, 128, 128, false)
+            val resizedBitmap = Bitmap.createScaledBitmap(inputImage, 512, 512, false)
 
             // Convert the Bitmap to a TensorImage
             val inputTensor = TensorImage(DataType.FLOAT32)
@@ -283,7 +281,7 @@ class OverlayFragment : Fragment() {
 
             // Define the output shape and type based on the model's output
             val outputBuffer =
-                TensorBuffer.createFixedSize(intArrayOf(1, 128, 128, 1), DataType.FLOAT32)
+                TensorBuffer.createFixedSize(intArrayOf(1, 512, 512, 1), DataType.FLOAT32)
 
             // Run the inference
             tflite!!.run(inputTensor.buffer, outputBuffer.buffer)
