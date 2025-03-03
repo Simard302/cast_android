@@ -30,7 +30,8 @@
                 android:layout_marginEnd="16dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/purple"
-                android:text="Left"
+                android:text="Insertion Side:\nLeft"
+                android:contentDescription="Desired needle insertion direction"
                 android:textColor="@color/black_new"
                 android:textSize="14sp" />
 
@@ -41,7 +42,8 @@
                 android:layout_marginEnd="16dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/grey"
-                android:text="Left\nTest\nTestagain"
+                android:text="Needle Insertion:\n37°"
+                android:contentDescription="Desired needle insertion angle"
                 android:textColor="@color/black_new"
                 android:textSize="14sp" />
 
@@ -52,14 +54,27 @@
                 android:layout_marginEnd="16dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/grey"
-                android:text="Left"
+                android:text="Needle Length:\n≥10 cm"
+                android:contentDescription="Desired insertion needle length"
+                android:textColor="@color/black_new"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/desiredInsertDepth"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="16dp"
+                android:layout_weight="1"
+                android:backgroundTint="@color/grey"
+                android:text="Nerve Depth:\n4.2 cm"
+                android:contentDescription="Nerve depth"
                 android:textColor="@color/black_new"
                 android:textSize="14sp" />
         </LinearLayout>
 
         <!-- Ultrasound image placeholder -->
         <ImageView
-            android:id="@+id/ivUltrasound"
+            android:id="@+id/ultrasound_image"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
@@ -96,20 +111,20 @@
                 android:backgroundTint="@color/green"
                 android:text="Start"
                 android:textColor="@color/black_new"
-                android:textSize="14sp"
-                android:layout_marginEnd="16dp" />
+                android:textSize="14sp" />
 
-            <ImageButton
-                android:id="@+id/btnSettings"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:scaleType="fitCenter"
-                android:padding="15dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="20dp"
-                android:backgroundTint="@color/grey"
-                android:background="@drawable/rounded_background"
-                android:src="@drawable/settings" />
+<!--            <ImageButton-->
+<!--                android:id="@+id/btnSettings"-->
+<!--                android:layout_width="60dp"-->
+<!--                android:layout_height="60dp"-->
+<!--                android:scaleType="fitCenter"-->
+<!--                android:padding="15dp"-->
+<!--                android:layout_marginTop="20dp"-->
+<!--                android:layout_marginBottom="20dp"-->
+<!--                android:contentDescription="Go to settings"-->
+<!--                android:background="@drawable/rounded_background"-->
+<!--                android:backgroundTint="@color/grey"-->
+<!--                android:src="@drawable/settings" />-->
         </LinearLayout>
 
         <LinearLayout
@@ -136,11 +151,13 @@
                     android:layout_height="80dp"
                     android:scaleType="fitCenter"
                     android:layout_margin="4dp"
-                    android:background="@color/purple"
+                    android:background="@drawable/rounded_background"
+                    android:backgroundTint="@color/purple"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center"
                     android:orientation="horizontal"
+                    android:contentDescription="Hide/Show the needle"
                     android:padding="15dp">
 
                     <ImageView
@@ -165,11 +182,13 @@
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:layout_margin="4dp"
-                    android:background="@color/purple"
+                    android:background="@drawable/rounded_background"
+                    android:backgroundTint="@color/purple"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center"
                     android:orientation="horizontal"
+                    android:contentDescription="Hide/Show the nerve"
                     android:padding="15dp" >
 
                     <ImageView
@@ -206,35 +225,34 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:layout_marginBottom="8dp"
-                    android:gravity="center_horizontal"
+                    android:gravity="center"
                     android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/tvDepthLabel"
+                        android:id="@+id/tvSafeZoneLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:text="Depth:"
+                        android:text="Safe Zone:"
                         android:textSize="16sp" />
 
                     <SeekBar
-                        android:id="@+id/seekBarDepth"
-                        android:layout_width="400dp"
-                        android:layout_height="400dp"
-                        android:max="100"
-                        android:min="-100"
+                        android:id="@+id/seekBarSafeZone"
+                        android:layout_width="300dp"
+                        android:layout_height="300dp"
+                        android:max="10"
+                        android:min="0"
+                        android:progress="5"
                         android:progressBackgroundTint="@color/black_new"
                         android:progressTint="@color/purple_200"
                         android:rotation="270"
                         android:thumbTint="@color/black_new" />
 
                     <TextView
-                        android:id="@+id/tvDepthValue"
+                        android:id="@+id/tvSafeZoneValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="100 mm" />
+                        android:text="5 x" />
                 </LinearLayout>
 
                 <!-- Gain slider row -->
@@ -242,8 +260,7 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:layout_marginBottom="8dp"
-                    android:gravity="center_horizontal"
+                    android:gravity="center"
                     android:orientation="vertical">
 
                     <TextView
@@ -255,10 +272,11 @@
 
                     <SeekBar
                         android:id="@+id/seekBarGain"
-                        android:layout_width="400dp"
-                        android:layout_height="400dp"
-                        android:max="100"
-                        android:min="-100"
+                        android:layout_width="300dp"
+                        android:layout_height="300dp"
+                        android:max="20"
+                        android:min="1"
+                        android:progress="1"
                         android:progressBackgroundTint="@color/black_new"
                         android:progressTint="@color/purple_200"
                         android:rotation="270"
@@ -277,7 +295,7 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:gravity="center_horizontal"
+                    android:gravity="center"
                     android:orientation="vertical">
 
                     <TextView
@@ -290,10 +308,11 @@
 
                     <SeekBar
                         android:id="@+id/seekBarFrequency"
-                        android:layout_width="400dp"
-                        android:layout_height="400dp"
-                        android:max="100"
-                        android:min="-100"
+                        android:layout_width="300dp"
+                        android:layout_height="300dp"
+                        android:max="40"
+                        android:min="16"
+                        android:progress="16"
                         android:progressBackgroundTint="@color/black_new"
                         android:progressTint="@color/purple_200"
                         android:rotation="270"
@@ -304,7 +323,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:text="3.0 MHz" />
+                        android:text="8.0 MHz" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -324,6 +343,7 @@
                     android:scaleType="fitCenter"
                     android:padding="20dp"
                     android:backgroundTint="@color/white"
+                    android:contentDescription="Freeze the screen"
                     android:src="@drawable/freeze" />
                 <ImageButton
                     android:id="@+id/btnZoom"
@@ -333,6 +353,7 @@
                     android:scaleType="fitCenter"
                     android:padding="20dp"
                     android:backgroundTint="@color/white"
+                    android:contentDescription="Zoom into the screen"
                     android:src="@drawable/zoom" />
                 <ImageButton
                     android:id="@+id/btnCapture"
@@ -342,6 +363,7 @@
                     android:scaleType="fitCenter"
                     android:padding="20dp"
                     android:backgroundTint="@color/white"
+                    android:contentDescription="Capture the screen"
                     android:src="@drawable/capture" />
             </LinearLayout>
 
