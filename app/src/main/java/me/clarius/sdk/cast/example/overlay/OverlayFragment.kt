@@ -291,8 +291,8 @@ class OverlayFragment : Fragment() {
         }
 
         private fun postprocessOutput(outputBuffer: TensorBuffer, originalImage: Bitmap): Bitmap {
-            val maskWidth = 128
-            val maskHeight = 128
+            val maskWidth = 512
+            val maskHeight = 512
             val originalWidth = originalImage.width
             val originalHeight = originalImage.height
 
