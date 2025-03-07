@@ -224,12 +224,14 @@ class OverlayFragment : Fragment() {
     }
 
     inner class TfModel {
-        private var tflite: Interpreter? = null
+        private var tfliteNerve: Interpreter? = null
+        private var tfliteNeedle: Interpreter? = null
         private var currentModelTag = "TAP"
 
         init {
             try {
-                tflite = Interpreter(loadModelFile("TAP.tflite"))
+                tfliteNerve = Interpreter(loadModelFile("TAP.tflite"))
+                tfliteNeedle = Interpreter(loadModelFile("needle.tflite"))
             } catch (e: IOException) {
                 throw RuntimeException(e)
             }
@@ -244,19 +246,19 @@ class OverlayFragment : Fragment() {
 
         fun setNewModel(modelTag: String) {
             Log.d(TAG, "model tag: $modelTag")
-            if (tflite != null) {
-                tflite!!.close()
+            if (tfliteNerve != null) {
+                tfliteNerve!!.close()
                 Log.d(TAG, "Closed Current model resources")
             }
             val modelFile = getModelFile(modelTag)
             try {
-                tflite = Interpreter((loadModelFile(modelFile)))
+                tfliteNerve = Interpreter((loadModelFile(modelFile)))
                 currentModelTag = modelTag
                 Log.d(TAG, "New model set to: $modelFile")
             } catch (e: IOException) {
                 throw RuntimeException(e)
             }
-            val inputShape = tflite!!.getInputTensor(0).shape()
+            val inputShape = tfliteNerve!!.getInputTensor(0).shape()
             println("Model input shape: " + inputShape.contentToString())
         }
 
@@ -278,56 +280,55 @@ class OverlayFragment : Fragment() {
             // Convert the Bitmap to a TensorImage
             val inputTensor = TensorImage(DataType.FLOAT32)
             inputTensor.load(resizedBitmap)
-
-            // Define the output shape and type based on the model's output
-            val outputBuffer =
-                TensorBuffer.createFixedSize(intArrayOf(1, 512, 512, 1), DataType.FLOAT32)
-
-            // Run the inference
-            tflite!!.run(inputTensor.buffer, outputBuffer.buffer)
-
-            // Post-process the output
-            return postprocessOutput(outputBuffer, inputImage)
+    
+            // Output Buffers
+            val outputBufferNerve = TensorBuffer.createFixedSize(intArrayOf(1, 512, 512, 1), DataType.FLOAT32)
+            val outputBufferNeedle = TensorBuffer.createFixedSize(intArrayOf(1, 512, 512, 1), DataType.FLOAT32)
+    
+            // Run both models
+            // TODO: Run models selectively based on UI
+            tfliteNerve?.run(inputTensor.buffer, outputBufferNerve.buffer)
+            tfliteNeedle?.run(inputTensor.buffer, outputBufferNeedle.buffer)
+    
+            // Process and overlay both outputs
+            return postprocessOutput(outputBufferNerve, outputBufferNeedle, inputImage)
         }
-
-        private fun postprocessOutput(outputBuffer: TensorBuffer, originalImage: Bitmap): Bitmap {
-            val maskWidth = 128
-            val maskHeight = 128
+    
+        private fun postprocessOutput(outputNerveBuffer: TensorBuffer, outputNeedleBuffer: TensorBuffer, originalImage: Bitmap): Bitmap {
+            val maskWidth = 512
+            val maskHeight = 512
             val originalWidth = originalImage.width
             val originalHeight = originalImage.height
-
-            // Create a bitmap for the mask
-            val maskBitmap = Bitmap.createBitmap(maskWidth, maskHeight, Bitmap.Config.ARGB_8888)
-
-            // Define a semi-transparent yellow color for the mask
-            val semiTransparentYellow = Color.argb(128, 255, 255, 0)
-
-            // Create the mask bitmap based on the outputBuffer
+    
+            // Create bitmaps for the masks
+            val nerveBitmap = Bitmap.createBitmap(maskWidth, maskHeight, Bitmap.Config.ARGB_8888)
+            val needleBitmap = Bitmap.createBitmap(maskWidth, maskHeight, Bitmap.Config.ARGB_8888)
+    
+            // Define mask colors
+            val semiTransparentYellow = Color.argb(128, 255, 255, 0) // Nerve
+            val semiTransparentRed = Color.argb(128, 255, 0, 0) // Needle
+    
             for (x in 0 until maskWidth) {
                 for (y in 0 until maskHeight) {
-                    val value = outputBuffer.getFloatValue(y * maskWidth + x)
-                    if (value > 0.5) {
-                        maskBitmap.setPixel(x, y, semiTransparentYellow)
-                    } else {
-                        // Use a transparent color for areas outside the mask
-                        maskBitmap.setPixel(x, y, Color.TRANSPARENT)
-                    }
+                    val nerveValue = outputNerveBuffer.getFloatValue(y * maskWidth + x)
+                    val needleValue = outputNeedleBuffer.getFloatValue(y * maskWidth + x)
+    
+                    nerveBitmap.setPixel(x, y, if (nerveValue > 0.5) semiTransparentYellow else Color.TRANSPARENT)
+                    needleBitmap.setPixel(x, y, if (needleValue > 0.5) semiTransparentRed else Color.TRANSPARENT)
                 }
             }
-
-            // Scale the mask bitmap to match the original image size
-            val scaledMask =
-                Bitmap.createScaledBitmap(maskBitmap, originalWidth, originalHeight, false)
-
-            // Create a new bitmap to combine original image and the scaled mask
-            val combinedBitmap =
-                Bitmap.createBitmap(originalWidth, originalHeight, Bitmap.Config.ARGB_8888)
-
-            // Draw the original image and mask overlay onto the combined bitmap
+    
+            // Scale the mask bitmaps to match the original image size
+            val scaledNerveMask = Bitmap.createScaledBitmap(nerveBitmap, originalWidth, originalHeight, false)
+            val scaledNeedleMask = Bitmap.createScaledBitmap(needleBitmap, originalWidth, originalHeight, false)
+            
+            // Create a new bitmap to combine the original image with the masks
+            val combinedBitmap = Bitmap.createBitmap(originalWidth, originalHeight, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(combinedBitmap)
             canvas.drawBitmap(originalImage, 0f, 0f, null)
-            canvas.drawBitmap(scaledMask, 0f, 0f, null)
-
+            canvas.drawBitmap(scaledNerveMask, 0f, 0f, null)
+            canvas.drawBitmap(scaledNeedleMask, 0f, 0f, null)
+    
             return combinedBitmap
         }
     }
