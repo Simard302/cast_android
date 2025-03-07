@@ -61,7 +61,7 @@ class CastService : Service() {
         override fun newSpectralImageFn(data: ByteBuffer, info: SpectralImageInfo) {
         }
 
-        override fun newImuDataFn(pos: Array<PosInfo>) {
+        override fun newImuDataFn(pos: PosInfo) {
         }
 
         override fun progress(i: Int) {
@@ -76,6 +76,7 @@ class CastService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        Log.d(TAG, "This is the cast "+cast.toString())
         if (cast == null) {
             Log.d(TAG, "Creating the Cast service")
             cast = Cast(applicationContext.applicationInfo.nativeLibraryDir, listener)

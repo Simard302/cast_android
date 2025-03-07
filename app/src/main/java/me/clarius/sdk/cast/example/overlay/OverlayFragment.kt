@@ -1,6 +1,8 @@
 package me.clarius.sdk.cast.example.overlay
 
 import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.content.ServiceConnection
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
@@ -15,7 +17,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.SeekBar
@@ -25,6 +26,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import me.clarius.sdk.Cast
 import me.clarius.sdk.ProbeInfo
+import me.clarius.sdk.UserFunction
 import me.clarius.sdk.cast.example.R
 import me.clarius.sdk.cast.example.clarius.CastService
 import me.clarius.sdk.cast.example.clarius.CastService.CastBinder
@@ -39,6 +41,7 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.charset.StandardCharsets
 import java.util.Optional
+
 
 class OverlayFragment : Fragment() {
     private var castService: CastService? = null
@@ -176,10 +179,88 @@ class OverlayFragment : Fragment() {
         })
     }
 
+    override fun onResume() {
+        super.onResume()
+        val intent = requireActivity().intent
+        if (intent != null) {
+            val extras = intent.extras
+            if (extras != null) {
+                val probeSerial =
+                    Optional.ofNullable<ByteArray>(extras.getByteArray("cus_probe_serial"))
+                        .map<String>(OverlayFragment::fromByteArray)
+                val ipAddress =
+                    Optional.ofNullable<ByteArray>(extras.getByteArray("cus_ip_address"))
+                        .map<String>(OverlayFragment::fromByteArray)
+                val castPort = Optional.ofNullable<ByteArray>(extras.getByteArray("cus_cast_port"))
+                    .map<String>(OverlayFragment::fromByteArray)
+                val networkId =
+                    Optional.ofNullable<ByteArray>(extras.getByteArray("cus_network_id"))
+                        .map<String>(OverlayFragment::fromByteArray)
+                Log.d(TAG, "Received probe serial: " + probeSerial.orElse("<none>"))
+                Log.d(TAG, "Received IP address: " + ipAddress.orElse("<none>"))
+                Log.d(TAG, "Received cast port: " + castPort.orElse("<none>"))
+                Log.d(TAG, "Received network ID: " + networkId.orElse("<none>"))
+//                ipAddress.ifPresent { s: String? ->
+//                    binding.ipAddress.setText(
+//                        s
+//                    )
+//                }
+//                castPort.ifPresent { s: String? ->
+//                    binding.tcpPort.setText(
+//                        s
+//                    )
+//                }
+//                networkId.ifPresent { s: String? ->
+//                    binding.networkId.setText(
+//                        s
+//                    )
+//                }
+            }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val context = requireContext()
+        val intent = Intent(context, CastService::class.java)
+        context.bindService(intent, castConnection, Context.BIND_AUTO_CREATE)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        val context = requireContext()
+        context.unbindService(castConnection)
+        castBinder = null
+    }
+
+    private fun toggleRun() {
+        if (castBinder == null) {
+            showError("Clarius Cast not initialized")
+            return
+        }
+        showMessage("Toggle run")
+        castBinder!!.getCast()!!.userFunction(
+            UserFunction.Freeze, 0.0
+        ) { result: Boolean ->
+            Log.d(
+                TAG,
+                "Freeze function result: $result"
+            )
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding = null
+    }
+
     private val castConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // We've bound to our service, cast the IBinder now
             castBinder = service as CastBinder
+
+            Log.d(TAG, "Cast connection started")
+
 
             /** Nerve Model  */
             // Initialize tf model on service connected
@@ -341,6 +422,14 @@ class OverlayFragment : Fragment() {
         Log.e(OverlayFragment.TAG, "Error: $text")
         val mainHandler = Handler(Looper.getMainLooper())
         mainHandler.post { Toast.makeText(requireContext(), text, Toast.LENGTH_SHORT).show() }
+    }
+
+    private fun showMessage(text: CharSequence) {
+        Log.d(TAG, (text as String))
+        val mainHandler = Handler(Looper.getMainLooper())
+        mainHandler.post {
+            Toast.makeText(requireContext(), text, Toast.LENGTH_SHORT).show()
+        }
     }
 
     companion object {

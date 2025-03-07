@@ -73,11 +73,16 @@ class PairDevice : Fragment() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.d(TAG, "Creating pairdevice")
         super.onCreate(savedInstanceState)
         if (!CastWrapper.isInitialized()) {
-            CastWrapper.setCastService(CastService())
+            Log.d(TAG, "Trying to create CastService")
+            val castService =  CastService();
+            CastWrapper.setCastService(castService)
         }
+        Log.d(TAG, "Setting castBinder")
         castBinder = CastWrapper.getCastService().CastBinder()
+        Log.d(TAG, castBinder!!.getCast().toString())
     }
 
     override fun onDestroy() {
@@ -95,6 +100,10 @@ class PairDevice : Fragment() {
     private fun doConnect() {
         if (castBinder == null) {
             showError("Clarius Cast not initialized")
+            return
+        }
+        if (castBinder!!.getCast() == null) {
+            showError("Clarius Cast .getCast is null")
             return
         }
         binding!!.ipAddressLayout.error = null
@@ -116,13 +125,13 @@ class PairDevice : Fragment() {
         castBinder!!.interfaceDescriptor
         castBinder!!.getCast()!!.connect(
             ipAddress, tcpPort.get(), networkId, certificate
-        ) { result: Boolean, port: Int, swRevMatch: Boolean ->
+        ) { result: Boolean, imagePort: Int, imuPort: Int, swRevMatch: Boolean ->
             Log.d(
                 TAG,
                 "Connection result: $result"
             )
             if (result) {
-                Log.d(TAG, "UDP stream will be on port $port")
+                Log.d(TAG, "UDP stream will be on port $imagePort")
                 Log.d(
                     TAG,
                     "App software " + (if (swRevMatch) "matches" else "does not match")
