@@ -76,11 +76,10 @@ class PairDevice : Fragment() {
         Log.d(TAG, "Creating pairdevice")
         super.onCreate(savedInstanceState)
         if (!CastWrapper.isInitialized()) {
-            Log.d(TAG, "Trying to create CastService")
-            val castService =  CastService();
-            CastWrapper.setCastService(castService)
+            showError("Cast Service not initialized")
+            return;
         }
-        Log.d(TAG, "Setting castBinder")
+        Log.d(TAG, "Setting castBinder using cast service: " + CastWrapper.getCastService().toString())
         castBinder = CastWrapper.getCastService().CastBinder()
         Log.d(TAG, castBinder!!.getCast().toString())
     }
@@ -125,7 +124,7 @@ class PairDevice : Fragment() {
         castBinder!!.interfaceDescriptor
         castBinder!!.getCast()!!.connect(
             ipAddress, tcpPort.get(), networkId, certificate
-        ) { result: Boolean, imagePort: Int, imuPort: Int, swRevMatch: Boolean ->
+        ) { result: Boolean, imagePort: Int, swRevMatch: Boolean ->
             Log.d(
                 TAG,
                 "Connection result: $result"

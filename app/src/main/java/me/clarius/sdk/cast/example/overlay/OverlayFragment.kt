@@ -153,6 +153,14 @@ class OverlayFragment : Fragment() {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 val gain = progress.toDouble() / 2
                 gainValueText.text = "$gain x"
+                castBinder!!.getCast()!!.userFunction(
+                    UserFunction.SetGain, gain*100
+                ) { result: Boolean ->
+                    Log.d(
+                        TAG,
+                        "Gain function result: $result"
+                    )
+                }
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?){
             }
@@ -259,29 +267,30 @@ class OverlayFragment : Fragment() {
             // We've bound to our service, cast the IBinder now
             castBinder = service as CastBinder
 
-            Log.d(TAG, "Cast connection started")
-
 
             /** Nerve Model  */
             // Initialize tf model on service connected
             model = TfModel()
 
-//            val procedure = SlidesFragmentArgs.fromBundle(arguments!!).procedure
-
-//            model!!.setNewModel(procedure)
-
-//
-//            // Observe the processed image LiveData
+            var processingImage = false
+            // Observe the processed image LiveData
             castBinder!!.getProcessedImage().observe(
-                viewLifecycleOwner
+                requireActivity()
             ) { processedImage: Bitmap ->
-                // Apply your image manipulation logic here
-                val manipulatedImage = model!!.process(processedImage)
-                binding!!.ultrasoundImage.setImageBitmap(manipulatedImage)
+                if (!processingImage) {
+                    Log.d(TAG, "processed image blabla")
+                    if (binding != null) {
+                        processingImage = true
+                        Log.d(TAG, "binding is here")   // TODO for some reason more than 1 can pass here
+                        val modifiedImage = model!!.process(processedImage)
+                        binding!!.ultrasoundImage.setImageBitmap(modifiedImage)
+                        processingImage = false
+                    }
+                }
             }
-//
+
             Log.d(TAG, "model created")
-//
+
             castBinder!!.timestamp.observe(
                 viewLifecycleOwner
             ) { timestamp: Long? -> this@OverlayFragment.setTimestamp(timestamp) }
@@ -290,12 +299,11 @@ class OverlayFragment : Fragment() {
                 viewLifecycleOwner
             ) { text: String? -> this@OverlayFragment.showError(text) }
 
-//            castBinder!!.getRawDataProgress().observe(
-//                viewLifecycleOwner
-//            ) { progress: Int? ->
-//                binding!!.rawDataDownloadProgressBar.progress =
-//                    progress!!
-//            }
+            castBinder!!.getRawDataProgress().observe(
+                viewLifecycleOwner
+            ) { progress: Int? ->
+                Log.d(TAG, "Raw data progress: $progress")
+            }
         }
 
         override fun onServiceDisconnected(component: ComponentName) {

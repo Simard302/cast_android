@@ -5,7 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Binder
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import me.clarius.sdk.Button
@@ -15,6 +17,7 @@ import me.clarius.sdk.PosInfo
 import me.clarius.sdk.ProcessedImageInfo
 import me.clarius.sdk.RawImageInfo
 import me.clarius.sdk.SpectralImageInfo
+import me.clarius.sdk.cast.example.overlay.CastWrapper
 import me.clarius.sdk.cast.example.overlay.ImageConverter
 import java.nio.ByteBuffer
 import java.util.Optional
@@ -61,7 +64,7 @@ class CastService : Service() {
         override fun newSpectralImageFn(data: ByteBuffer, info: SpectralImageInfo) {
         }
 
-        override fun newImuDataFn(pos: PosInfo) {
+        override fun newImuDataFn(pos: Array<PosInfo>) {
         }
 
         override fun progress(i: Int) {
@@ -79,6 +82,7 @@ class CastService : Service() {
         Log.d(TAG, "This is the cast "+cast.toString())
         if (cast == null) {
             Log.d(TAG, "Creating the Cast service")
+            CastWrapper.setCastService(this)
             cast = Cast(applicationContext.applicationInfo.nativeLibraryDir, listener)
             cast!!.initialize(
                 getCertDir(this)
