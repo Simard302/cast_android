@@ -23,49 +23,53 @@
             android:gravity="center_vertical"
             android:paddingBottom="8dp">
 
-            <Button
+            <android.widget.Button
                 android:id="@+id/desiredInsertDirection"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_marginEnd="16dp"
                 android:layout_weight="1"
+                android:background="@drawable/rounded_background"
                 android:backgroundTint="@color/purple"
                 android:text="Insertion Side:\nLeft"
                 android:contentDescription="Desired needle insertion direction"
                 android:textColor="@color/black_new"
                 android:textSize="14sp" />
 
-            <Button
+            <android.widget.Button
                 android:id="@+id/desiredInsertAngle"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_marginEnd="16dp"
                 android:layout_weight="1"
+                android:background="@drawable/rounded_background"
                 android:backgroundTint="@color/grey"
                 android:text="Needle Insertion:\n37°"
                 android:contentDescription="Desired needle insertion angle"
                 android:textColor="@color/black_new"
                 android:textSize="14sp" />
 
-            <Button
+            <android.widget.Button
                 android:id="@+id/desiredInsertLength"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_marginEnd="16dp"
                 android:layout_weight="1"
+                android:background="@drawable/rounded_background"
                 android:backgroundTint="@color/grey"
                 android:text="Needle Length:\n≥10 cm"
                 android:contentDescription="Desired insertion needle length"
                 android:textColor="@color/black_new"
                 android:textSize="14sp" />
 
-            <Button
+            <android.widget.Button
                 android:id="@+id/desiredInsertDepth"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_marginEnd="16dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/grey"
+                android:background="@drawable/rounded_background"
                 android:text="Nerve Depth:\n4.2 cm"
                 android:contentDescription="Nerve depth"
                 android:textColor="@color/black_new"
@@ -103,12 +107,13 @@
             android:gravity="center_vertical"
             android:paddingBottom="8dp">
 
-            <Button
+            <android.widget.Button
                 android:id="@+id/btnStart"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:backgroundTint="@color/green"
+                android:background="@drawable/rounded_background"
                 android:text="Start"
                 android:textColor="@color/black_new"
                 android:textSize="14sp" />
@@ -132,7 +137,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@color/grey"
+            android:background="@drawable/rounded_background"
+            android:backgroundTint="@color/grey"
             android:orientation="vertical"
             android:padding="8dp">
 
@@ -147,18 +153,18 @@
                 <LinearLayout
                     android:id="@+id/btnNeedle"
                     android:layout_width='0dp'
-                    android:layout_weight="1"
                     android:layout_height="80dp"
-                    android:scaleType="fitCenter"
                     android:layout_margin="4dp"
+                    android:layout_weight="1"
                     android:background="@drawable/rounded_background"
                     android:backgroundTint="@color/purple"
                     android:clickable="true"
+                    android:contentDescription="Hide/Show the needle"
                     android:focusable="true"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:contentDescription="Hide/Show the needle"
-                    android:padding="15dp">
+                    android:padding="15dp"
+                    android:scaleType="fitCenter">
 
                     <ImageView
                         android:id="@+id/needleVisibility"
@@ -171,25 +177,25 @@
                         android:id="@+id/needleIcon"
                         android:layout_width="0dp"
                         android:layout_height="50dp"
-                        android:layout_weight="1"
                         android:layout_marginStart="8dp"
+                        android:layout_weight="1"
                         android:src="@drawable/needle" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/btnNerve"
                     android:layout_width='0dp'
-                    android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:layout_margin="4dp"
+                    android:layout_weight="1"
                     android:background="@drawable/rounded_background"
                     android:backgroundTint="@color/purple"
                     android:clickable="true"
+                    android:contentDescription="Hide/Show the nerve"
                     android:focusable="true"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:contentDescription="Hide/Show the nerve"
-                    android:padding="15dp" >
+                    android:padding="15dp">
 
                     <ImageView
                         android:id="@+id/nerveVisibility"
@@ -202,8 +208,8 @@
                         android:id="@+id/nerveIcon"
                         android:layout_width="0dp"
                         android:layout_height="50dp"
-                        android:layout_weight="1"
                         android:layout_marginStart="8dp"
+                        android:layout_weight="1"
                         android:src="@drawable/nerve" />
                 </LinearLayout>
 
@@ -214,11 +220,15 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1"
-                android:background="@color/white"
-                android:gravity="top"
+                android:layout_weight="3"
+                android:background="@drawable/rounded_background"
+                android:backgroundTint="@color/white"
+                android:gravity="center"
                 android:orientation="horizontal"
-                android:padding="8dp">
+                android:padding="10dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp">
+
 
                 <!-- Depth slider row -->
                 <LinearLayout
@@ -333,35 +343,45 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:padding="10dp">
+                android:weightSum="3"
+                android:paddingTop="10dp"
+                android:paddingBottom="3dp"
+                android:paddingHorizontal="3dp"
+                >
+
 
                 <ImageButton
                     android:id="@+id/btnFreeze"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="80dp"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
                     android:padding="20dp"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/rounded_background"
                     android:backgroundTint="@color/white"
                     android:contentDescription="Freeze the screen"
                     android:src="@drawable/freeze" />
                 <ImageButton
                     android:id="@+id/btnZoom"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="80dp"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
                     android:padding="20dp"
+                    android:layout_marginEnd="10dp"
+                    android:background="@drawable/rounded_background"
                     android:backgroundTint="@color/white"
                     android:contentDescription="Zoom into the screen"
                     android:src="@drawable/zoom" />
                 <ImageButton
                     android:id="@+id/btnCapture"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="80dp"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
                     android:padding="20dp"
+                    android:background="@drawable/rounded_background"
                     android:backgroundTint="@color/white"
                     android:contentDescription="Capture the screen"
                     android:src="@drawable/capture" />
