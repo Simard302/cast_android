@@ -12,7 +12,7 @@
     <string name="bluetooth">Bluetooth</string>
     <string name="default_ip_address">192.168.1.1</string>
     <string name="tcp_port">TCP port</string>
-    <string name="default_tcp_port">5828</string>
+    <string name="default_tcp_port"></string>
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
     <string name="toggle_run">Toggle run</string>

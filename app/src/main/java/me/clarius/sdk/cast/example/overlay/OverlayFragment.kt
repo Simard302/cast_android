@@ -58,6 +58,10 @@ class OverlayFragment : Fragment() {
     private var insertionSideLeft: Boolean = true
     // TODO add gain, visibility, etc
     // TODO add stuff for (if frozen, and add that logic to the toggleRun)
+    private var usDepth: Double = 3.0    // in cm
+    private var usGain: Double = 0.0   // in % * 2 - 100 (so 50% is 0.0)
+    private var isFrozen: Boolean = true // Is frozen
+    private var isZoomed: Boolean = false // is zoomed
 
 
     override fun onCreateView(
@@ -93,6 +97,25 @@ class OverlayFragment : Fragment() {
                             R.color.red
                         )
                     )
+
+                    // Set settings to defaults
+                    castBinder!!.getCast()!!.userFunction(
+                        UserFunction.SetGain, usGain
+                    ) { result: Boolean ->
+                        Log.d(
+                            TAG,
+                            "Gain function result: $result"
+                        )
+                    }
+
+                    castBinder!!.getCast()!!.userFunction(
+                        UserFunction.SetDepth, usDepth
+                    ) { result: Boolean ->
+                        Log.d(
+                            TAG,
+                            "Gain function result: $result"
+                        )
+                    }
                 }
                 this.started = !this.started
             }
@@ -182,15 +205,46 @@ class OverlayFragment : Fragment() {
 
         gainSlider.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val gain = progress.toDouble() / 2
-                gainValueText.text = "$gain x"
-                castBinder!!.getCast()!!.userFunction(
-                    UserFunction.SetGain, gain*100
-                ) { result: Boolean ->
-                    Log.d(
-                        TAG,
-                        "Gain function result: $result"
-                    )
+                val gain = progress.toDouble()
+                gainValueText.text = "$gain %"
+                usGain = gain * 2 - 100;
+                if (started) {
+                    castBinder!!.getCast()!!.userFunction(
+                        UserFunction.SetGain, usGain
+                    ) { result: Boolean ->
+                        Log.d(
+                            TAG,
+                            "Gain function result: $result"
+                        )
+                    }
+                }
+
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?){
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+            }
+
+        })
+
+        val depthSlider: SeekBar = view.findViewById(R.id.seekBarDepth)
+        val depthTextValue: TextView = view.findViewById(R.id.tvDepthValue)
+
+        depthSlider.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val depth = progress.toDouble() / 10
+                depthTextValue.text = "$depth cm"
+                if (started) {
+                    usDepth = depth;
+                    castBinder!!.getCast()!!.userFunction(
+                        UserFunction.SetDepth, depth
+                    ) { result: Boolean ->
+                        Log.d(
+                            TAG,
+                            "Depth function result: $result"
+                        )
+                    }
                 }
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?){
@@ -201,21 +255,82 @@ class OverlayFragment : Fragment() {
 
         })
 
-        val freqSlider: SeekBar = view.findViewById(R.id.seekBarFrequency)
-        val freqTextValue: TextView = view.findViewById(R.id.tvFrequencyValue)
-
-        freqSlider.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val freq = progress.toDouble() / 2
-                freqTextValue.text = "$freq MHz"
+        val buttonFreeze: ImageButton = view.findViewById(R.id.btnFreeze)
+        buttonFreeze.setOnClickListener {
+            if (started) {
+                if (isFrozen) {
+                    buttonFreeze.backgroundTintList = ColorStateList.valueOf(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.white
+                        )
+                    )
+                } else {
+                    buttonFreeze.backgroundTintList = ColorStateList.valueOf(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.purple
+                        )
+                    )
+                }
+                isFrozen = !isFrozen
+                castBinder!!.getCast()!!.userFunction(
+                    UserFunction.Freeze, 0.0
+                ) { result: Boolean ->
+                    Log.d(
+                        TAG,
+                        "Freeze function result: $result"
+                    )
+                }
             }
-            override fun onStartTrackingTouch(seekBar: SeekBar?){
-            }
+        }
 
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+        val buttonZoom: ImageButton = view.findViewById(R.id.btnZoom)
+        buttonZoom.setOnClickListener {
+            if (started) {
+                if (isZoomed) {
+                    buttonZoom.backgroundTintList = ColorStateList.valueOf(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.white
+                        )
+                    )
+                } else {
+                    buttonZoom.backgroundTintList = ColorStateList.valueOf(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.purple
+                        )
+                    )
+                }
+                isZoomed = !isZoomed
+                castBinder!!.getCast()!!.userFunction(
+                    UserFunction.Zoom, 0.0
+                ) { result: Boolean ->
+                    Log.d(
+                        TAG,
+                        "Zoom function result: $result"
+                    )
+                }
             }
+        }
 
-        })
+        val buttonCapture: ImageButton = view.findViewById(R.id.btnCapture)
+        buttonCapture.setOnClickListener {
+            if (started) {
+                castBinder!!.getCast()!!.userFunction(
+                    UserFunction.CaptureImage, 0.0
+                ) { result: Boolean ->
+                    Log.d(
+                        TAG,
+                        "Capture function result: $result"
+                    )
+                    if (result) {
+                        showMessage("Captured image")
+                    }
+                }
+            }
+        }
     }
 
     override fun onResume() {
@@ -277,7 +392,6 @@ class OverlayFragment : Fragment() {
             showError("Clarius Cast not initialized")
             return false
         }
-        val cast = castBinder!!.getCast()
 //        if (!cast!!.isConnected) {
 //            showError("Clarius device is not yet connected")
 //            return false
@@ -290,6 +404,7 @@ class OverlayFragment : Fragment() {
                 "Freeze function result: $result"
             )
         }
+        isFrozen = !isFrozen
         return true
     }
 
