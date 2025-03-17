@@ -1,7 +1,7 @@
 # Clarius Cast Example
 
 1. Copy the `aar` package into the `libs` subfolder
-    - Current compatible version is https://github.com/clariusdev/cast/releases/tag/v11.2.0
+    - Current compatible version is https://github.com/clariusdev/cast/releases/tag/v12.0.2
     - Use android armv8 for emulating on android tablet
 2. Re-sync Gradle
 3. Build
