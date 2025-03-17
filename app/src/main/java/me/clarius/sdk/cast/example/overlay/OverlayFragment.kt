@@ -8,6 +8,7 @@ import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -518,34 +519,109 @@ class OverlayFragment : Fragment() {
         private fun postprocessOutput(outputNerveBuffer: TensorBuffer, outputNeedleBuffer: TensorBuffer, originalImage: Bitmap): Bitmap {
             val originalWidth = originalImage.width
             val originalHeight = originalImage.height
-    
+        
             // Define mask colors
             val semiTransparentYellow = Color.argb(128, 255, 255, 0) // Nerve
             val semiTransparentRed = Color.argb(128, 255, 0, 0) // Needle
-
-            // TODO potential optimization is use single bitmap and either set the bits to yellow, red or merge if both
-            for (x in 0 until this.modelDims.first) {
-                for (y in 0 until this.modelDims.second) {
-                    val needleValue = outputNeedleBuffer.getFloatValue(y * modelDims.first + x)
-                    val nerveValue = outputNerveBuffer.getFloatValue(y * modelDims.first + x)
+            val markerColor = Color.BLUE // Color to mark coordinates
+        
+            val showGPS = true
+        
+            // Variables for GPS calculations
+            val centerX = modelDims.first / 2
+            val xMin = (centerX * 0.9).toInt()
+            val xMax = (centerX * 1.1).toInt()
+            var ySum = 0
+            var ySumCount = 0
+            var needleTipX = -1
+            var needleTipY = -1
+        
+            for (x in 0 until modelDims.first) {
+                for (y in 0 until modelDims.second) {
+                    val index = y * modelDims.first + x
+                    val needleValue = outputNeedleBuffer.getFloatValue(index)
+                    val nerveValue = outputNerveBuffer.getFloatValue(index)
+        
                     needleBitmap.setPixel(x, y, if (needleValue > 0.5 && showNeedleOverlay) semiTransparentRed else Color.TRANSPARENT)
                     nerveBitmap.setPixel(x, y, if (nerveValue > 0.5 && showNerveOverlay) semiTransparentYellow else Color.TRANSPARENT)
+        
+                    if (showGPS) {
+                        // Collect nerve region pixels within the 10% horizontal center
+                        if (showGPS && nerveValue > 0.5 && x in xMin..xMax) {
+                            ySum += y
+                            ySumCount++
+                        }
+            
+                        // Track lowest point of the needle
+                        if (showGPS && needleValue > 0.5) {
+                            if (y > needleTipY) { // Update if a lower point is found
+                                needleTipX = x
+                                needleTipY = y
+                            }
+                        }
+                    }
                 }
             }
-    
-            // Scale the mask bitmaps to match the original image size
-            val scaledNerveMask = Bitmap.createScaledBitmap(nerveBitmap, originalWidth, originalHeight, false)
-            val scaledNeedleMask = Bitmap.createScaledBitmap(needleBitmap, originalWidth, originalHeight, false)
-            
+        
             // Create a new bitmap to combine the original image with the masks
             val combinedBitmap = Bitmap.createBitmap(originalWidth, originalHeight, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(combinedBitmap)
             canvas.drawBitmap(originalImage, 0f, 0f, null)
-            canvas.drawBitmap(scaledNerveMask, 0f, 0f, null)
-            canvas.drawBitmap(scaledNeedleMask, 0f, 0f, null)
-    
+        
+            val scaleX = originalWidth.toFloat() / modelDims.first
+            val scaleY = originalHeight.toFloat() / modelDims.second
+        
+            if (showNerveOverlay) {
+                val scaledNerveMask = Bitmap.createScaledBitmap(nerveBitmap, originalWidth, originalHeight, false)
+                canvas.drawBitmap(scaledNerveMask, 0f, 0f, null)
+            }
+            if (showNeedleOverlay) {
+                val scaledNeedleMask = Bitmap.createScaledBitmap(needleBitmap, originalWidth, originalHeight, false)
+                canvas.drawBitmap(scaledNeedleMask, 0f, 0f, null)
+            }
+                
+            if (showGPS) {
+                if (ySumCount == 0) {
+                    println("No nerve detected in the target region")
+                    return combinedBitmap
+                }
+                
+                val avgY = ySum / ySumCount
+                val targetCoord = Pair(centerX, avgY)
+                
+                val needleTipCoord = if (needleTipX != -1) Pair(needleTipX, needleTipY) else null
+        
+                // Scale coordinates to original image size
+                val scaledTargetX = (targetCoord.first * scaleX).toInt()
+                val scaledTargetY = (targetCoord.second * scaleY).toInt()
+                val scaledNeedleTipX = (needleTipCoord?.first ?: 0) * scaleX
+                val scaledNeedleTipY = (needleTipCoord?.second ?: 0) * scaleY
+        
+                // Mark targetCoord
+                canvas.drawCircle(scaledTargetX.toFloat(), scaledTargetY.toFloat(), 10f, Paint().apply {
+                    color = markerColor
+                    style = Paint.Style.FILL
+                })
+        
+                // Mark needleTipCoord
+                if (needleTipCoord != null) {
+                    canvas.drawCircle(scaledNeedleTipX, scaledNeedleTipY, 10f, Paint().apply {
+                        color = markerColor
+                        style = Paint.Style.FILL
+                    })
+                    
+                    var remainingDistance: Float? = null
+                    // Calculate Euclidean distance in pixels
+                    remainingDistance = kotlin.math.sqrt(
+                        ((scaledTargetX - scaledNeedleTipX) * (scaledTargetX - scaledNeedleTipX)) +
+                        ((scaledTargetY - scaledNeedleTipY) * (scaledTargetY - scaledNeedleTipY))
+                    )        
+                }
+            }
+        
             return combinedBitmap
         }
+        
     }
 
     private fun setTimestamp(timestamp: Long?) {
