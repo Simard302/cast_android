@@ -118,18 +118,19 @@
                 android:textColor="@color/black_new"
                 android:textSize="14sp" />
 
-<!--            <ImageButton-->
-<!--                android:id="@+id/btnSettings"-->
-<!--                android:layout_width="60dp"-->
-<!--                android:layout_height="60dp"-->
-<!--                android:scaleType="fitCenter"-->
-<!--                android:padding="15dp"-->
-<!--                android:layout_marginTop="20dp"-->
-<!--                android:layout_marginBottom="20dp"-->
-<!--                android:contentDescription="Go to settings"-->
-<!--                android:background="@drawable/rounded_background"-->
-<!--                android:backgroundTint="@color/grey"-->
-<!--                android:src="@drawable/settings" />-->
+            <ImageButton
+                android:id="@+id/btnSettings"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:scaleType="fitCenter"
+                android:padding="15dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="20dp"
+                android:layout_marginLeft="10dp"
+                android:contentDescription="Go to settings"
+                android:background="@drawable/rounded_background"
+                android:backgroundTint="@color/grey"
+                android:src="@drawable/settings" />
         </LinearLayout>
 
         <LinearLayout
@@ -157,7 +158,7 @@
                     android:layout_margin="4dp"
                     android:layout_weight="1"
                     android:background="@drawable/rounded_background"
-                    android:backgroundTint="@color/purple"
+                    android:backgroundTint="@color/white"
                     android:clickable="true"
                     android:contentDescription="Hide/Show the needle"
                     android:focusable="true"
@@ -171,7 +172,7 @@
                         android:layout_width="0dp"
                         android:layout_height="30dp"
                         android:layout_weight="1"
-                        android:src="@drawable/show" />
+                        android:src="@drawable/hide" />
 
                     <ImageView
                         android:id="@+id/needleIcon"
@@ -189,7 +190,7 @@
                     android:layout_margin="4dp"
                     android:layout_weight="1"
                     android:background="@drawable/rounded_background"
-                    android:backgroundTint="@color/purple"
+                    android:backgroundTint="@color/white"
                     android:clickable="true"
                     android:contentDescription="Hide/Show the nerve"
                     android:focusable="true"
@@ -202,7 +203,7 @@
                         android:layout_width="0dp"
                         android:layout_height="30dp"
                         android:layout_weight="1"
-                        android:src="@drawable/show" />
+                        android:src="@drawable/hide" />
 
                     <ImageView
                         android:id="@+id/nerveIcon"
@@ -224,7 +225,7 @@
                 android:background="@drawable/rounded_background"
                 android:backgroundTint="@color/white"
                 android:gravity="center"
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:padding="10dp"
                 android:layout_marginStart="4dp"
                 android:layout_marginEnd="4dp">
@@ -232,108 +233,116 @@
 
                 <!-- Depth slider row -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
                     <TextView
                         android:id="@+id/tvSafeZoneLabel"
-                        android:layout_width="wrap_content"
+                        android:layout_width="60dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
                         android:text="Safe Zone:"
-                        android:textSize="16sp" />
+                        android:textColor="@color/black_new"
+                        android:textSize="12sp" />
 
                     <SeekBar
                         android:id="@+id/seekBarSafeZone"
-                        android:layout_width="300dp"
-                        android:layout_height="300dp"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
                         android:max="10"
                         android:min="0"
                         android:progress="5"
                         android:progressBackgroundTint="@color/black_new"
                         android:progressTint="@color/purple_200"
-                        android:rotation="270"
                         android:thumbTint="@color/black_new" />
 
                     <TextView
                         android:id="@+id/tvSafeZoneValue"
-                        android:layout_width="wrap_content"
+                        android:layout_width="45dp"
                         android:layout_height="wrap_content"
-                        android:text="5 x" />
+                        android:text="5 x"
+                        android:textColor="@color/black_new"
+                        android:textSize="12sp"/>
                 </LinearLayout>
 
                 <!-- Gain slider row -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
                     <TextView
                         android:id="@+id/tvGainLabel"
-                        android:layout_width="wrap_content"
+                        android:layout_width="60dp"
                         android:layout_height="wrap_content"
                         android:text="Gain:"
-                        android:textSize="16sp" />
+                        android:textAlignment="center"
+                        android:textColor="@color/black_new"
+                        android:textSize="12sp" />
 
                     <SeekBar
                         android:id="@+id/seekBarGain"
-                        android:layout_width="300dp"
-                        android:layout_height="300dp"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
                         android:max="20"
                         android:min="1"
                         android:progress="1"
                         android:progressBackgroundTint="@color/black_new"
                         android:progressTint="@color/purple_200"
-                        android:rotation="270"
                         android:thumbTint="@color/black_new" />
 
                     <TextView
                         android:id="@+id/tvGainValue"
-                        android:layout_width="wrap_content"
+                        android:layout_width="45dp"
                         android:layout_height="wrap_content"
-                        android:text="1.0 x" />
+                        android:text="1.0 x"
+                        android:textColor="@color/black_new"
+                        android:textSize="12sp"/>
 
                 </LinearLayout>
 
                 <!-- Frequency slider row -->
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
                     <TextView
                         android:id="@+id/tvFrequencyLabel"
-                        android:layout_width="wrap_content"
+                        android:layout_width="60dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
                         android:text="Frequency:"
-                        android:textSize="16sp" />
+                        android:textAlignment="center"
+                        android:textColor="@color/black_new"
+                        android:textSize="12sp" />
 
                     <SeekBar
                         android:id="@+id/seekBarFrequency"
-                        android:layout_width="300dp"
-                        android:layout_height="300dp"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
                         android:max="40"
                         android:min="16"
                         android:progress="16"
                         android:progressBackgroundTint="@color/black_new"
                         android:progressTint="@color/purple_200"
-                        android:rotation="270"
                         android:thumbTint="@color/black_new" />
 
                     <TextView
                         android:id="@+id/tvFrequencyValue"
-                        android:layout_width="wrap_content"
+                        android:layout_width="45dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="8.0 MHz" />
+                        android:text="8.0 MHz"
+                        android:textColor="@color/black_new"
+                        android:textSize="12sp"/>
                 </LinearLayout>
             </LinearLayout>
 

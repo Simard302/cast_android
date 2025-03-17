@@ -17,6 +17,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.SeekBar
@@ -24,6 +25,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import me.clarius.sdk.Cast
 import me.clarius.sdk.ProbeInfo
 import me.clarius.sdk.UserFunction
@@ -44,11 +46,18 @@ import java.util.Optional
 
 
 class OverlayFragment : Fragment() {
-    private var castService: CastService? = null
     private var castBinder: CastBinder? = null
     private var binding: FragmentOverlayBinding? = null
     var model: TfModel? = null
     private var timestamp: Long? = 0L
+
+    // Toggle buttons and slider values
+    private var started: Boolean = false
+    private var showNeedleOverlay: Boolean = false
+    private var showNerveOverlay: Boolean = false
+    private var insertionSideLeft: Boolean = true
+    // TODO add gain, visibility, etc
+    // TODO add stuff for (if frozen, and add that logic to the toggleRun)
 
 
     override fun onCreateView(
@@ -64,71 +73,93 @@ class OverlayFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val startButton: Button = view.findViewById(R.id.btnStart)
+        startButton.setOnClickListener {
+            val res = this.toggleRun()
+            if (res) {
+                if (this.started) {
+                    startButton.text = "START"
+                    startButton.backgroundTintList = ColorStateList.valueOf(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.green
+                        )
+                    )
+                } else {
+                    startButton.text = "STOP"
+                    startButton.backgroundTintList = ColorStateList.valueOf(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.red
+                        )
+                    )
+                }
+                this.started = !this.started
+            }
+        }
+
+        val settingsButton: ImageButton = view.findViewById(R.id.btnSettings)
+        settingsButton.setOnClickListener {
+            findNavController().navigate(R.id.pair_device)
+        }
+
         val directionButton: Button = view.findViewById(R.id.desiredInsertDirection)
 
         directionButton.setOnClickListener {
-            if (directionButton.text == "Insertion Side:\nLeft") {
-
+            if (this.insertionSideLeft) {
                 directionButton.text = "Insertion Side:\nRight"
             } else {
                 directionButton.text = "Insertion Side:\nLeft"
             }
+            this.insertionSideLeft = !this.insertionSideLeft
         }
 
         val needleButton: LinearLayout = view.findViewById(R.id.btnNeedle)
         val needleVisibility: ImageView = view.findViewById(R.id.needleVisibility)
-        val showDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.show)
 
         needleButton.setOnClickListener {
-            val visibilityDrawable = needleVisibility.drawable;
-            if (visibilityDrawable != null && showDrawable != null) {
-                if (visibilityDrawable.constantState == showDrawable.constantState) {
-                    needleVisibility.setImageResource(R.drawable.hide)
-                    needleButton.backgroundTintList = ColorStateList.valueOf(
-                        ContextCompat.getColor(
-                            requireContext(),
-                            R.color.purple
-                        )
+            if (this.showNeedleOverlay) {
+                needleVisibility.setImageResource(R.drawable.hide)
+                needleButton.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.white
                     )
-                } else {
-                    needleVisibility.setImageResource(R.drawable.show)
-                    needleButton.backgroundTintList = ColorStateList.valueOf(
-                        ContextCompat.getColor(
-                            requireContext(),
-                            R.color.white
-                        )
+                )
+            } else {
+                needleVisibility.setImageResource(R.drawable.show)
+                needleButton.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.purple
                     )
-                }
+                )
             }
-
+            this.showNeedleOverlay = !this.showNeedleOverlay
         }
 
         val nerveButton: LinearLayout = view.findViewById(R.id.btnNerve)
         val nerveVisibility: ImageView = view.findViewById(R.id.nerveVisibility)
-        val hideDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.hide)
 
         nerveButton.setOnClickListener {
-            val visibilityDrawable = nerveVisibility.drawable;
-            if (visibilityDrawable != null && hideDrawable != null) {
-                if (visibilityDrawable.constantState == hideDrawable.constantState) {
-                    nerveVisibility.setImageResource(R.drawable.show)
-                    nerveButton.backgroundTintList = ColorStateList.valueOf(
-                        ContextCompat.getColor(
-                            requireContext(),
-                            R.color.purple
-                        )
+            if (this.showNerveOverlay) {
+                nerveVisibility.setImageResource(R.drawable.hide)
+                nerveButton.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.white
                     )
-                } else {
-                    nerveVisibility.setImageResource(R.drawable.hide)
-                    nerveButton.backgroundTintList = ColorStateList.valueOf(
-                        ContextCompat.getColor(
-                            requireContext(),
-                            R.color.white
-                        )
+                )
+            } else {
+                nerveVisibility.setImageResource(R.drawable.show)
+                nerveButton.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.purple
                     )
-                }
-
+                )
             }
+            this.showNerveOverlay = !this.showNerveOverlay
         }
 
         val safeZoneSlider: SeekBar = view.findViewById(R.id.seekBarSafeZone)
@@ -241,12 +272,16 @@ class OverlayFragment : Fragment() {
         castBinder = null
     }
 
-    private fun toggleRun() {
+    private fun toggleRun(): Boolean {
         if (castBinder == null) {
             showError("Clarius Cast not initialized")
-            return
+            return false
         }
-        showMessage("Toggle run")
+        val cast = castBinder!!.getCast()
+//        if (!cast!!.isConnected) {
+//            showError("Clarius device is not yet connected")
+//            return false
+//        }
         castBinder!!.getCast()!!.userFunction(
             UserFunction.Freeze, 0.0
         ) { result: Boolean ->
@@ -255,6 +290,7 @@ class OverlayFragment : Fragment() {
                 "Freeze function result: $result"
             )
         }
+        return true
     }
 
     override fun onDestroyView() {
@@ -315,41 +351,20 @@ class OverlayFragment : Fragment() {
     inner class TfModel {
         private var tfliteNerve: Interpreter? = null
         private var tfliteNeedle: Interpreter? = null
-        private var currentModelTag = "TAP"
+        private val modelDims: Pair<Int, Int> = Pair(128, 128)
+        // Bitmaps
+        val nerveBitmap = Bitmap.createBitmap(modelDims.first, modelDims.second, Bitmap.Config.ARGB_8888)
+        val needleBitmap = Bitmap.createBitmap(modelDims.first, modelDims.second, Bitmap.Config.ARGB_8888)
 
         init {
             try {
-                tfliteNerve = Interpreter(loadModelFile("TAP.tflite"))
+                tfliteNerve = Interpreter(loadModelFile("TAP-old.tflite"))
                 tfliteNeedle = Interpreter(loadModelFile("needle.tflite"))
             } catch (e: IOException) {
                 throw RuntimeException(e)
             }
         }
 
-        private fun getModelFile(modelTag: String): String {
-            return when (modelTag) {
-                "Transabdominal Plane Block" -> "TAP.tflite"
-                else -> "none"
-            }
-        }
-
-        fun setNewModel(modelTag: String) {
-            Log.d(TAG, "model tag: $modelTag")
-            if (tfliteNerve != null) {
-                tfliteNerve!!.close()
-                Log.d(TAG, "Closed Current model resources")
-            }
-            val modelFile = getModelFile(modelTag)
-            try {
-                tfliteNerve = Interpreter((loadModelFile(modelFile)))
-                currentModelTag = modelTag
-                Log.d(TAG, "New model set to: $modelFile")
-            } catch (e: IOException) {
-                throw RuntimeException(e)
-            }
-            val inputShape = tfliteNerve!!.getInputTensor(0).shape()
-            println("Model input shape: " + inputShape.contentToString())
-        }
 
         @Throws(IOException::class)
         fun loadModelFile(modelFile: String): MappedByteBuffer {
@@ -364,46 +379,42 @@ class OverlayFragment : Fragment() {
 
         fun process(inputImage: Bitmap): Bitmap {
             // Resize the input image to match the expected input size of the model
-            val resizedBitmap = Bitmap.createScaledBitmap(inputImage, 512, 512, false)
+            val resizedBitmap = Bitmap.createScaledBitmap(inputImage, modelDims.first, modelDims.second, false)
 
             // Convert the Bitmap to a TensorImage
             val inputTensor = TensorImage(DataType.FLOAT32)
             inputTensor.load(resizedBitmap)
-    
-            // Output Buffers
-            val outputBufferNerve = TensorBuffer.createFixedSize(intArrayOf(1, 512, 512, 1), DataType.FLOAT32)
-            val outputBufferNeedle = TensorBuffer.createFixedSize(intArrayOf(1, 512, 512, 1), DataType.FLOAT32)
+
+            val outputBufferNerve = TensorBuffer.createFixedSize(intArrayOf(1, modelDims.first, modelDims.second, 1), DataType.FLOAT32)
+            val outputBufferNeedle = TensorBuffer.createFixedSize(intArrayOf(1, modelDims.first, modelDims.second, 1), DataType.FLOAT32)
     
             // Run both models
-            // TODO: Run models selectively based on UI
-            tfliteNerve?.run(inputTensor.buffer, outputBufferNerve.buffer)
-            tfliteNeedle?.run(inputTensor.buffer, outputBufferNeedle.buffer)
+            if (showNerveOverlay){
+                tfliteNerve?.run(inputTensor.buffer, outputBufferNerve.buffer)
+            }
+            if (showNeedleOverlay) {
+                tfliteNeedle?.run(inputTensor.buffer, outputBufferNeedle.buffer)
+            }
     
             // Process and overlay both outputs
             return postprocessOutput(outputBufferNerve, outputBufferNeedle, inputImage)
         }
     
         private fun postprocessOutput(outputNerveBuffer: TensorBuffer, outputNeedleBuffer: TensorBuffer, originalImage: Bitmap): Bitmap {
-            val maskWidth = 512
-            val maskHeight = 512
             val originalWidth = originalImage.width
             val originalHeight = originalImage.height
-    
-            // Create bitmaps for the masks
-            val nerveBitmap = Bitmap.createBitmap(maskWidth, maskHeight, Bitmap.Config.ARGB_8888)
-            val needleBitmap = Bitmap.createBitmap(maskWidth, maskHeight, Bitmap.Config.ARGB_8888)
     
             // Define mask colors
             val semiTransparentYellow = Color.argb(128, 255, 255, 0) // Nerve
             val semiTransparentRed = Color.argb(128, 255, 0, 0) // Needle
-    
-            for (x in 0 until maskWidth) {
-                for (y in 0 until maskHeight) {
-                    val nerveValue = outputNerveBuffer.getFloatValue(y * maskWidth + x)
-                    val needleValue = outputNeedleBuffer.getFloatValue(y * maskWidth + x)
-    
-                    nerveBitmap.setPixel(x, y, if (nerveValue > 0.5) semiTransparentYellow else Color.TRANSPARENT)
-                    needleBitmap.setPixel(x, y, if (needleValue > 0.5) semiTransparentRed else Color.TRANSPARENT)
+
+            // TODO potential optimization is use single bitmap and either set the bits to yellow, red or merge if both
+            for (x in 0 until this.modelDims.first) {
+                for (y in 0 until this.modelDims.second) {
+                    val needleValue = outputNeedleBuffer.getFloatValue(y * modelDims.first + x)
+                    val nerveValue = outputNerveBuffer.getFloatValue(y * modelDims.first + x)
+                    needleBitmap.setPixel(x, y, if (needleValue > 0.5 && showNeedleOverlay) semiTransparentRed else Color.TRANSPARENT)
+                    nerveBitmap.setPixel(x, y, if (nerveValue > 0.5 && showNerveOverlay) semiTransparentYellow else Color.TRANSPARENT)
                 }
             }
     

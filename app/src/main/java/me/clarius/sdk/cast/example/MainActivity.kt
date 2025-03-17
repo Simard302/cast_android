@@ -27,27 +27,6 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(this, navController, appBarConfiguration!!)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        val id = item.itemId
-
-        if (id == R.id.action_settings) {
-            return true
-        } else if (id == R.id.action_pair_device) {
-            findNavController(this, R.id.nav_host_fragment_content_main).navigate(R.id.action_global_fragment_pair)
-            return true
-        }
-
-        return super.onOptionsItemSelected(item)
-    }
 
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(this, R.id.nav_host_fragment_content_main)

@@ -9,8 +9,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.Navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import me.clarius.sdk.Cast
 import me.clarius.sdk.ProbeInfo
+import me.clarius.sdk.cast.example.R
 import me.clarius.sdk.cast.example.clarius.CastService.CastBinder
 import me.clarius.sdk.cast.example.utils.Utils
 import me.clarius.sdk.cast.example.databinding.FragmentPairBinding
@@ -124,7 +127,7 @@ class PairDevice : Fragment() {
         castBinder!!.interfaceDescriptor
         castBinder!!.getCast()!!.connect(
             ipAddress, tcpPort.get(), networkId, certificate
-        ) { result: Boolean, imagePort: Int, swRevMatch: Boolean ->
+        ) { result: Boolean, imagePort: Int, imuPort: Int, swRevMatch: Boolean ->
             Log.d(
                 TAG,
                 "Connection result: $result"
@@ -135,7 +138,9 @@ class PairDevice : Fragment() {
                     TAG,
                     "App software " + (if (swRevMatch) "matches" else "does not match")
                 )
+                showMessage("Connected")
                 askProbeInfo(castBinder!!.getCast()!!)
+                findNavController().navigate(R.id.returnToOverlay)
             }
         }
     }

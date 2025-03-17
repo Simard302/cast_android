@@ -24,6 +24,9 @@
         android:name="procedure"
         app:argType="string"
         app:nullable="false" />
+        <action
+            android:id="@+id/pair_device"
+            app:destination="@id/fragment_pair" />
     </fragment>
 
     <fragment
@@ -31,10 +34,9 @@
         android:name="me.clarius.sdk.cast.example.clarius.PairDevice"
         android:label="Pair Device"
         tools:layout="@layout/fragment_pair">
+        <action
+            android:id="@+id/returnToOverlay"
+            app:destination="@id/overlayFragment" />
     </fragment>
-
-    <action
-        android:id="@+id/action_global_fragment_pair"
-        app:destination="@id/fragment_pair" />
 
 </navigation>

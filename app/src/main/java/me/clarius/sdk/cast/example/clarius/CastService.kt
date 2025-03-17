@@ -64,7 +64,7 @@ class CastService : Service() {
         override fun newSpectralImageFn(data: ByteBuffer, info: SpectralImageInfo) {
         }
 
-        override fun newImuDataFn(pos: Array<PosInfo>) {
+        override fun newImuDataFn(pos0: PosInfo) {
         }
 
         override fun progress(i: Int) {
