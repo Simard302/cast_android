@@ -412,7 +412,7 @@ class OverlayFragment : Fragment() {
             val nerveColor = Color.argb(128, 255, 255, 0) // Nerve
             val needleColor = Color.argb(128, 127, 0, 255) // Needle
             val markerColor = Color.BLUE
-            val guideColor = Color.GREEN
+            val guideColor = Color.argb(128,0,255,0)
         
             val showGPS = true  // TODO Integrate with UI
             // Variables for GPS calculations
