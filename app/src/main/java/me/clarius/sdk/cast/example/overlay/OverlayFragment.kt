@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -66,6 +67,8 @@ class OverlayFragment : Fragment() {
     private var usGain: Double = 0.0   // in % * 2 - 100 (so 50% is 0.0)
     private var isFrozen: Boolean = true // Is frozen
     private var isZoomed: Boolean = false // is zoomed
+    private var lockGuide = false
+    private var showGPS = true
 
 
     override fun onCreateView(
@@ -122,6 +125,7 @@ class OverlayFragment : Fragment() {
                     }
                 }
                 this.started = !this.started
+                lockGuide = true
             }
         }
 
@@ -474,7 +478,6 @@ class OverlayFragment : Fragment() {
         // Bitmaps
         val nerveBitmap = Bitmap.createBitmap(modelDims.first, modelDims.second, Bitmap.Config.ARGB_8888)
         val needleBitmap = Bitmap.createBitmap(modelDims.first, modelDims.second, Bitmap.Config.ARGB_8888)
-        var lockGuide = false
         var targetCoord: Pair<Int, Int> = Pair(-1, -1)
         var scaledTarget: Pair<Int, Int> = Pair(-1, -1)
         var recInitCoord: Pair<Int, Int> = Pair(-1, -1)
@@ -532,9 +535,9 @@ class OverlayFragment : Fragment() {
             val nerveColor = Color.argb(128, 255, 255, 0) // Nerve
             val needleColor = Color.argb(128, 127, 0, 255) // Needle
             val markerColor = Color.BLUE
-            val guideColor = Color.argb(200,0,150,0)
-        
-            var showGPS = true  // TODO Integrate with UI
+            val guideColor = Color.argb(69,192,254,203)
+
+//            var showGPS = true  // TODO Integrate with UI
 //            var lockGuide = false
 
             // Variables for GPS calculations
@@ -611,7 +614,13 @@ class OverlayFragment : Fragment() {
                                 (scaledTarget.second - recInitCoord.second)*(scaledTarget.second - recInitCoord.second)
                     ) * scale + 1 // 1cm extra
                     var recAngle = abs(Math.toDegrees(atan2(((recInitCoord.second - scaledTarget.second).toDouble()), (recInitCoord.first - scaledTarget.first).toDouble())))
-                    if (recAngle>90) recAngle = 90-recAngle
+                    if (recAngle>90) recAngle = 180-recAngle
+                    val desiredInsertAngleButton: Button = view!!.findViewById(R.id.desiredInsertAngle)
+                    val desiredInsertLengthButton: Button = view!!.findViewById(R.id.desiredInsertLength)
+                    val desiredInsertDepthButton: Button = view!!.findViewById(R.id.desiredInsertDepth)
+                    desiredInsertAngleButton.text = "Recommended Needle Insertion: %.1f°".format(recAngle)
+                    desiredInsertLengthButton.text = "Recommended Needle Length: ≥%.1f cm".format(recLength)
+                    desiredInsertDepthButton.text = "Nerve Depth: %.1f cm".format(nerveDepth)
                     Log.d(TAG, "nerveDepth:$nerveDepth, recLength:$recLength, recAngle:$recAngle")
 
                     // Draw green rectangle between recInitCoord and targetCoord
@@ -626,7 +635,7 @@ class OverlayFragment : Fragment() {
                         style = Paint.Style.FILL
                     })
 
-                    lockGuide = true
+//                    lockGuide = true
                 } else {
                     // Draw green rectangle between recInitCoord and targetCoord
                     canvas.drawLine(recInitCoord.first.toFloat(), recInitCoord.second.toFloat(), scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), Paint().apply {

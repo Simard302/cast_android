@@ -44,8 +44,8 @@
                 android:layout_weight="1"
                 android:background="@drawable/rounded_background"
                 android:backgroundTint="@color/grey"
-                android:text="Needle Insertion:\n37°"
                 android:contentDescription="Desired needle insertion angle"
+                android:text="Needle Insertion:\nN/A"
                 android:textColor="@color/black_new"
                 android:textSize="14sp" />
 
@@ -57,8 +57,8 @@
                 android:layout_weight="1"
                 android:background="@drawable/rounded_background"
                 android:backgroundTint="@color/grey"
-                android:text="Needle Length:\n≥10 cm"
                 android:contentDescription="Desired insertion needle length"
+                android:text="Needle Length:\nN/A"
                 android:textColor="@color/black_new"
                 android:textSize="14sp" />
 
@@ -68,10 +68,10 @@
                 android:layout_height="match_parent"
                 android:layout_marginEnd="16dp"
                 android:layout_weight="1"
-                android:backgroundTint="@color/grey"
                 android:background="@drawable/rounded_background"
-                android:text="Nerve Depth:\n4.2 cm"
+                android:backgroundTint="@color/grey"
                 android:contentDescription="Nerve depth"
+                android:text="Nerve Depth:\nN/A"
                 android:textColor="@color/black_new"
                 android:textSize="14sp" />
         </LinearLayout>
