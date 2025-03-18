@@ -125,7 +125,7 @@ class OverlayFragment : Fragment() {
                     }
                 }
                 this.started = !this.started
-                lockGuide = true
+                lockGuide = !lockGuide
             }
         }
 
@@ -618,9 +618,9 @@ class OverlayFragment : Fragment() {
                     val desiredInsertAngleButton: Button = view!!.findViewById(R.id.desiredInsertAngle)
                     val desiredInsertLengthButton: Button = view!!.findViewById(R.id.desiredInsertLength)
                     val desiredInsertDepthButton: Button = view!!.findViewById(R.id.desiredInsertDepth)
-                    desiredInsertAngleButton.text = "Recommended Needle Insertion: %.1f°".format(recAngle)
-                    desiredInsertLengthButton.text = "Recommended Needle Length: ≥%.1f cm".format(recLength)
-                    desiredInsertDepthButton.text = "Nerve Depth: %.1f cm".format(nerveDepth)
+                    desiredInsertAngleButton.text = "Recommended Needle Insertion:\n%.1f°".format(recAngle)
+                    desiredInsertLengthButton.text = "Recommended Needle Length:\n≥%.1f cm".format(recLength)
+                    desiredInsertDepthButton.text = "Nerve Depth:\n%.1f cm".format(nerveDepth)
                     Log.d(TAG, "nerveDepth:$nerveDepth, recLength:$recLength, recAngle:$recAngle")
 
                     // Draw green rectangle between recInitCoord and targetCoord
