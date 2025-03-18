@@ -557,8 +557,10 @@ class OverlayFragment : Fragment() {
 
                     // Find needle tip
                     if (showGPS && needleValue > 0.5) {
-                        if (y > needleTipCoord.second) {
-                            needleTipCoord = Pair(x, y)
+                        if (needleTipCoord != null) {
+                            if (y > needleTipCoord.second) {
+                                needleTipCoord = Pair(x, y)
+                            }
                         }
                         if (needleInitCoord == null) {
                             needleInitCoord = Pair(x, y)
@@ -604,12 +606,13 @@ class OverlayFragment : Fragment() {
                 val nerveDepth = scaledTargetY * scale
                 val recInitCoord = if (insertionSideLeft) Pair(centerX-(2/scale),0) else Pair(centerX+(2/scale),0)    // 2cm from probe centerline
                 val recLength = kotlin.math.sqrt(
-                    (scaledTargetX - recInitCoord.first).pow(2) + (scaledTargetY - recInitCoord.second).pow(2)
+                    (scaledTargetX - recInitCoord.first)*(scaledTargetX - recInitCoord.first) +
+                            (scaledTargetY - recInitCoord.second)*(scaledTargetY - recInitCoord.second)
                 ) * scale
                 val recAngle = Math.toDegrees(atan2(((recInitCoord.second - scaledTargetY).toDouble()), (recInitCoord.first - scaledTargetX).toDouble()))
 
                 // Draw green rectangle between recInitCoord and targetCoord
-                canvas.drawLine(recInitCoord.first, recInitCoord.second, scaledTargetX, scaledTargetY, Paint().apply {
+                canvas.drawLine(recInitCoord.first.toFloat(), recInitCoord.second.toFloat(), scaledTargetX.toFloat(), scaledTargetY.toFloat(), Paint().apply {
                     color = guideColor
                     strokeWidth = 30f
                 })
@@ -632,7 +635,8 @@ class OverlayFragment : Fragment() {
                     ) * scale
                     var currentAngle = Math.toDegrees(atan2(((scaledNeedleInitY - scaledTargetY).toDouble()), ((scaledNeedleInitX - scaledTargetX).toDouble())))
                     var currentInsertion = kotlin.math.sqrt(
-                        (scaledNeedleInitX - scaledNeedleTipX).pow(2) + (scaledNeedleInitY - scaledNeedleTipY).pow(2)
+                        (scaledNeedleInitX - scaledNeedleTipX)*(scaledNeedleInitX - scaledNeedleTipX)
+                                + (scaledNeedleInitY - scaledNeedleTipY)*(scaledNeedleInitY - scaledNeedleTipY)
                     ) * scale
                     var currentDepth = scaledNeedleTipY * scale
                 }
