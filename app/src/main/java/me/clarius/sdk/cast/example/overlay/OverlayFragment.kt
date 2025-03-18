@@ -44,6 +44,7 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.charset.StandardCharsets
 import java.util.Optional
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.pow
 
@@ -473,6 +474,10 @@ class OverlayFragment : Fragment() {
         // Bitmaps
         val nerveBitmap = Bitmap.createBitmap(modelDims.first, modelDims.second, Bitmap.Config.ARGB_8888)
         val needleBitmap = Bitmap.createBitmap(modelDims.first, modelDims.second, Bitmap.Config.ARGB_8888)
+        var lockGuide = false
+        var targetCoord: Pair<Int, Int> = Pair(-1, -1)
+        var scaledTarget: Pair<Int, Int> = Pair(-1, -1)
+        var recInitCoord: Pair<Int, Int> = Pair(-1, -1)
 
         init {
             try {
@@ -527,9 +532,11 @@ class OverlayFragment : Fragment() {
             val nerveColor = Color.argb(128, 255, 255, 0) // Nerve
             val needleColor = Color.argb(128, 127, 0, 255) // Needle
             val markerColor = Color.BLUE
-            val guideColor = Color.argb(128,0,255,0)
+            val guideColor = Color.argb(200,0,150,0)
         
-            val showGPS = true  // TODO Integrate with UI
+            var showGPS = true  // TODO Integrate with UI
+//            var lockGuide = false
+
             // Variables for GPS calculations
             val centerX = modelDims.first / 2
             val xMin = (centerX * 0.9).toInt()
@@ -550,7 +557,7 @@ class OverlayFragment : Fragment() {
                     nerveBitmap.setPixel(x, y, if (nerveValue > 0.5 && showNerveOverlay) nerveColor else Color.TRANSPARENT)
 
                     // Collect nerve region pixels within the 10% horizontal center
-                    if (nerveValue > 0.5 && x in xMin..xMax) {
+                    if (!lockGuide && nerveValue > 0.5 && x in xMin..xMax) {
                         ySum += y
                         ySumCount++
                     }
@@ -587,51 +594,70 @@ class OverlayFragment : Fragment() {
             }
                 
             if (showGPS) {
-                if (ySumCount == 0) {
-                    Log.d(TAG, "No nerve detected in the target region")
-                    return combinedBitmap
+                if (!lockGuide) {
+                    if (ySumCount == 0) {
+                        Log.d(TAG, "No nerve detected in the target region")
+                        return combinedBitmap
+                    }
+                    val avgY = ySum / ySumCount
+                    targetCoord = Pair(centerX, avgY)
+                    scaledTarget = Pair((targetCoord.first * scaleX).toInt(), (targetCoord.second * scaleY).toInt())
+
+                    // Calculate recommended needle trajectory
+                    val nerveDepth = scaledTarget.second * scale
+                    val recInitCoord = if (insertionSideLeft) Pair(scaledTarget.first-(2/scale),0) else Pair(scaledTarget.first+(2/scale),0)    // 2cm from probe centerline
+                    val recLength = kotlin.math.sqrt(
+                        (scaledTarget.first - recInitCoord.first)*(scaledTarget.first - recInitCoord.first) +
+                                (scaledTarget.second - recInitCoord.second)*(scaledTarget.second - recInitCoord.second)
+                    ) * scale + 1 // 1cm extra
+                    var recAngle = abs(Math.toDegrees(atan2(((recInitCoord.second - scaledTarget.second).toDouble()), (recInitCoord.first - scaledTarget.first).toDouble())))
+                    if (recAngle>90) recAngle = 90-recAngle
+                    Log.d(TAG, "nerveDepth:$nerveDepth, recLength:$recLength, recAngle:$recAngle")
+
+                    // Draw green rectangle between recInitCoord and targetCoord
+                    canvas.drawLine(recInitCoord.first.toFloat(), recInitCoord.second.toFloat(), scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), Paint().apply {
+                        color = guideColor
+                        strokeWidth = 90f
+                    })
+
+                    // Mark targetCoord
+                    canvas.drawCircle(scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), 3f, Paint().apply {
+                        color = markerColor
+                        style = Paint.Style.FILL
+                    })
+
+                    lockGuide = true
+                } else {
+                    // Draw green rectangle between recInitCoord and targetCoord
+                    canvas.drawLine(recInitCoord.first.toFloat(), recInitCoord.second.toFloat(), scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), Paint().apply {
+                        color = guideColor
+                        strokeWidth = 90f
+                    })
+
+                    // Mark targetCoord
+                    canvas.drawCircle(scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), 3f, Paint().apply {
+                        color = markerColor
+                        style = Paint.Style.FILL
+                    })
                 }
-                val avgY = ySum / ySumCount
-                val targetCoord = Pair(centerX, avgY)
 
                 // Scale coordinates to original image size
-                val scaledTargetX = (targetCoord.first * scaleX).toInt()
-                val scaledTargetY = (targetCoord.second * scaleY).toInt()
                 val scaledNeedleTipX = (needleTipCoord?.first ?: 0) * scaleX
                 val scaledNeedleTipY = (needleTipCoord?.second ?: 0) * scaleY
                 val scaledNeedleInitX = (needleInitCoord?.first ?: 0) * scaleX
                 val scaledNeedleInitY = (needleInitCoord?.second ?: 0) * scaleY
 
-                // Calculate recommended needle trajectory
-                val nerveDepth = scaledTargetY * scale
-                val recInitCoord = if (insertionSideLeft) Pair(centerX-(2/scale),0) else Pair(centerX+(2/scale),0)    // 2cm from probe centerline
-                val recLength = kotlin.math.sqrt(
-                    (scaledTargetX - recInitCoord.first)*(scaledTargetX - recInitCoord.first) +
-                            (scaledTargetY - recInitCoord.second)*(scaledTargetY - recInitCoord.second)
-                ) * scale
-                val recAngle = Math.toDegrees(atan2(((recInitCoord.second - scaledTargetY).toDouble()), (recInitCoord.first - scaledTargetX).toDouble()))
-
-                // Draw green rectangle between recInitCoord and targetCoord
-                canvas.drawLine(recInitCoord.first.toFloat(), recInitCoord.second.toFloat(), scaledTargetX.toFloat(), scaledTargetY.toFloat(), Paint().apply {
-                    color = guideColor
-                    strokeWidth = 30f
-                })
-
-                // Mark targetCoord
-                canvas.drawCircle(scaledTargetX.toFloat(), scaledTargetY.toFloat(), 5f, Paint().apply {
-                    color = markerColor
-                    style = Paint.Style.FILL
-                })
-
                 if (needleTipCoord != null) {
                     // Mark needleTipCoord
-                    canvas.drawCircle(scaledNeedleTipX, scaledNeedleTipY, 5f, Paint().apply {
+                    canvas.drawCircle(scaledNeedleTipX, scaledNeedleTipY, 3f, Paint().apply {
                         color = markerColor
                         style = Paint.Style.FILL
                     })
 
+                    val scaledTargetX = (targetCoord.first * scaleX).toInt()
+                    val scaledTargetY = (targetCoord.second * scaleY).toInt()
                     var targetDistance = kotlin.math.sqrt(
-                        (scaledTargetX - scaledNeedleTipX).pow(2) + (scaledTargetY - scaledNeedleTipY).pow(2)
+                        (scaledTargetX - scaledNeedleTipX)*(scaledTargetX - scaledNeedleTipX) + (scaledTargetY - scaledNeedleTipY)*(scaledTargetY - scaledNeedleTipY)
                     ) * scale
                     var currentAngle = Math.toDegrees(atan2(((scaledNeedleInitY - scaledTargetY).toDouble()), ((scaledNeedleInitX - scaledTargetX).toDouble())))
                     var currentInsertion = kotlin.math.sqrt(
@@ -639,6 +665,7 @@ class OverlayFragment : Fragment() {
                                 + (scaledNeedleInitY - scaledNeedleTipY)*(scaledNeedleInitY - scaledNeedleTipY)
                     ) * scale
                     var currentDepth = scaledNeedleTipY * scale
+                    Log.d(TAG, "targetDistance:$targetDistance, currentAngle:$currentAngle, currentInsertion:$currentInsertion, currentDepth:$currentDepth")
                 }
             }
         
