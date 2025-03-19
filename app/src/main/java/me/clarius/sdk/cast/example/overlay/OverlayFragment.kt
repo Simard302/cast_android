@@ -41,6 +41,8 @@ import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.io.FileInputStream
 import java.io.IOException
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.charset.StandardCharsets
@@ -57,6 +59,7 @@ class OverlayFragment : Fragment() {
     private var timestamp: Long? = 0L
 
     // Toggle buttons and slider values
+    private var displaying: Boolean = false
     private var started: Boolean = false
     private var showNeedleOverlay: Boolean = false
     private var showNerveOverlay: Boolean = false
@@ -70,13 +73,13 @@ class OverlayFragment : Fragment() {
     private var lockGuide = false
     private var showGPS = true
 
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentOverlayBinding.inflate(inflater, container, false)
+        displaying = false
 
         return binding!!.root
     }
@@ -84,10 +87,17 @@ class OverlayFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val imageView: ImageView = view.findViewById(R.id.ultrasound_image)
+        imageView.setOnClickListener {
+            if (!displaying) {
+                startDisplaying()
+                // Set the image
+            }
+        }
+
         val startButton: Button = view.findViewById(R.id.btnStart)
         startButton.setOnClickListener {
-            val res = this.toggleRun()
-            if (res) {
+            if (displaying) {
                 if (this.started) {
                     startButton.text = "START"
                     startButton.backgroundTintList = ColorStateList.valueOf(
@@ -104,25 +114,6 @@ class OverlayFragment : Fragment() {
                             R.color.red
                         )
                     )
-
-                    // Set settings to defaults
-                    castBinder!!.getCast()!!.userFunction(
-                        UserFunction.SetGain, usGain
-                    ) { result: Boolean ->
-                        Log.d(
-                            TAG,
-                            "Gain function result: $result"
-                        )
-                    }
-
-                    castBinder!!.getCast()!!.userFunction(
-                        UserFunction.SetDepth, usDepth
-                    ) { result: Boolean ->
-                        Log.d(
-                            TAG,
-                            "Gain function result: $result"
-                        )
-                    }
                 }
                 this.started = !this.started
                 lockGuide = !lockGuide
@@ -216,7 +207,7 @@ class OverlayFragment : Fragment() {
                 val gain = progress.toDouble()
                 gainValueText.text = "$gain %"
                 usGain = gain * 2 - 100;
-                if (started) {
+                if (displaying) {
                     castBinder!!.getCast()!!.userFunction(
                         UserFunction.SetGain, usGain
                     ) { result: Boolean ->
@@ -243,7 +234,7 @@ class OverlayFragment : Fragment() {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 val depth = progress.toDouble() / 10
                 depthTextValue.text = "$depth cm"
-                if (started) {
+                if (displaying) {
                     usDepth = depth;
                     castBinder!!.getCast()!!.userFunction(
                         UserFunction.SetDepth, depth
@@ -265,22 +256,7 @@ class OverlayFragment : Fragment() {
 
         val buttonFreeze: ImageButton = view.findViewById(R.id.btnFreeze)
         buttonFreeze.setOnClickListener {
-            if (started) {
-                if (isFrozen) {
-                    buttonFreeze.backgroundTintList = ColorStateList.valueOf(
-                        ContextCompat.getColor(
-                            requireContext(),
-                            R.color.white
-                        )
-                    )
-                } else {
-                    buttonFreeze.backgroundTintList = ColorStateList.valueOf(
-                        ContextCompat.getColor(
-                            requireContext(),
-                            R.color.purple
-                        )
-                    )
-                }
+            if (displaying) {
                 isFrozen = !isFrozen
                 castBinder!!.getCast()!!.userFunction(
                     UserFunction.Freeze, 0.0
@@ -295,7 +271,7 @@ class OverlayFragment : Fragment() {
 
         val buttonZoom: ImageButton = view.findViewById(R.id.btnZoom)
         buttonZoom.setOnClickListener {
-            if (started) {
+            if (displaying) {
                 if (isZoomed) {
                     buttonZoom.backgroundTintList = ColorStateList.valueOf(
                         ContextCompat.getColor(
@@ -325,7 +301,7 @@ class OverlayFragment : Fragment() {
 
         val buttonCapture: ImageButton = view.findViewById(R.id.btnCapture)
         buttonCapture.setOnClickListener {
-            if (started) {
+            if (displaying) {
                 castBinder!!.getCast()!!.userFunction(
                     UserFunction.CaptureImage, 0.0
                 ) { result: Boolean ->
@@ -341,45 +317,55 @@ class OverlayFragment : Fragment() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        val intent = requireActivity().intent
-        if (intent != null) {
-            val extras = intent.extras
-            if (extras != null) {
-                val probeSerial =
-                    Optional.ofNullable<ByteArray>(extras.getByteArray("cus_probe_serial"))
-                        .map<String>(OverlayFragment::fromByteArray)
-                val ipAddress =
-                    Optional.ofNullable<ByteArray>(extras.getByteArray("cus_ip_address"))
-                        .map<String>(OverlayFragment::fromByteArray)
-                val castPort = Optional.ofNullable<ByteArray>(extras.getByteArray("cus_cast_port"))
-                    .map<String>(OverlayFragment::fromByteArray)
-                val networkId =
-                    Optional.ofNullable<ByteArray>(extras.getByteArray("cus_network_id"))
-                        .map<String>(OverlayFragment::fromByteArray)
-                Log.d(TAG, "Received probe serial: " + probeSerial.orElse("<none>"))
-                Log.d(TAG, "Received IP address: " + ipAddress.orElse("<none>"))
-                Log.d(TAG, "Received cast port: " + castPort.orElse("<none>"))
-                Log.d(TAG, "Received network ID: " + networkId.orElse("<none>"))
-//                ipAddress.ifPresent { s: String? ->
-//                    binding.ipAddress.setText(
-//                        s
-//                    )
-//                }
-//                castPort.ifPresent { s: String? ->
-//                    binding.tcpPort.setText(
-//                        s
-//                    )
-//                }
-//                networkId.ifPresent { s: String? ->
-//                    binding.networkId.setText(
-//                        s
-//                    )
-//                }
-            }
+    fun startDisplaying(): Boolean {
+        if (castBinder == null) {
+            showError("Clarius Cast not initialized")
+            return false
         }
+        displaying = true
+        // Set settings to defaults
+        castBinder!!.getCast()!!.userFunction(
+            UserFunction.SetGain, usGain
+        ) { result: Boolean ->
+            Log.d(
+                TAG,
+                "Gain function result: $result"
+            )
+        }
+
+        castBinder!!.getCast()!!.userFunction(
+            UserFunction.SetDepth, usDepth
+        ) { result: Boolean ->
+            Log.d(
+                TAG,
+                "Gain function result: $result"
+            )
+        }
+        return true
     }
+
+    override fun onPause() {
+        super.onPause();
+        // Stop image updates when the activity is not in the foreground
+//        if (imageUpdater != null) {
+//            handler.removeCallbacks(imageUpdater);
+//        }
+//        isUpdating = false;
+//        // Reset the ImageView to display "Press to start"
+//        imageView.setImageResource(R.drawable.press_to_start);
+        displaying = false
+    }
+
+//    override fun onResume() {
+//        super.onResume()
+//        val intent = requireActivity().intent
+//        if (intent != null) {
+//            val extras = intent.extras
+//            if (extras != null) {
+//
+//            }
+//        }
+//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -436,11 +422,9 @@ class OverlayFragment : Fragment() {
             castBinder!!.getProcessedImage().observe(
                 requireActivity()
             ) { processedImage: Bitmap ->
-                if (!processingImage) {
-                    Log.d(TAG, "processed image blabla")
+                if (displaying && !processingImage) {
                     if (binding != null) {
                         processingImage = true
-                        Log.d(TAG, "binding is here")   // TODO for some reason more than 1 can pass here
                         val modifiedImage = model!!.process(processedImage)
                         binding!!.ultrasoundImage.setImageBitmap(modifiedImage)
                         processingImage = false
@@ -484,8 +468,8 @@ class OverlayFragment : Fragment() {
 
         init {
             try {
-                tfliteNerve = Interpreter(loadModelFile("TAP-old.tflite"))
-                tfliteNeedle = Interpreter(loadModelFile("needle.tflite"))
+                tfliteNerve = Interpreter(loadModelFile("20250318_nerve_model.tflite"))
+                tfliteNeedle = Interpreter(loadModelFile("20250318_needle_model.tflite"))
             } catch (e: IOException) {
                 throw RuntimeException(e)
             }
@@ -503,23 +487,38 @@ class OverlayFragment : Fragment() {
             return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
         }
 
+        fun convertBitmapToGrayscaleByteBuffer(bitmap: Bitmap, width: Int, height: Int): ByteBuffer {
+            // Allocate a ByteBuffer with room for one float per pixel.
+            val byteBuffer = ByteBuffer.allocateDirect(width * height * 4)
+            byteBuffer.order(ByteOrder.nativeOrder())
+
+            for (y in 0 until height) {
+                for (x in 0 until width) {
+                    // Get pixel color from ARGB_8888 bitmap.
+                    val pixel = bitmap.getPixel(x, y)
+                    // Compute grayscale using a common luminance formula.
+                    val gray = Color.red(pixel).toFloat()   // All pixels should have same value since grayscale, double check though
+                    byteBuffer.putFloat(gray)
+                }
+            }
+            byteBuffer.rewind()
+            return byteBuffer
+        }
+
         fun process(inputImage: Bitmap): Bitmap {
             // Resize the input image to match the expected input size of the model
             val resizedBitmap = Bitmap.createScaledBitmap(inputImage, modelDims.first, modelDims.second, false)
-
-            // Convert the Bitmap to a TensorImage
-            val inputTensor = TensorImage(DataType.FLOAT32)
-            inputTensor.load(resizedBitmap)
+            val grayscaleBuffer = convertBitmapToGrayscaleByteBuffer(resizedBitmap, modelDims.first, modelDims.second)
 
             val outputBufferNerve = TensorBuffer.createFixedSize(intArrayOf(1, modelDims.first, modelDims.second, 1), DataType.FLOAT32)
             val outputBufferNeedle = TensorBuffer.createFixedSize(intArrayOf(1, modelDims.first, modelDims.second, 1), DataType.FLOAT32)
     
             // Run both models
             if (showNerveOverlay){
-                tfliteNerve?.run(inputTensor.buffer, outputBufferNerve.buffer)
+                tfliteNerve?.run(grayscaleBuffer, outputBufferNerve.buffer)
             }
             if (showNeedleOverlay) {
-                tfliteNeedle?.run(inputTensor.buffer, outputBufferNeedle.buffer)
+                tfliteNeedle?.run(grayscaleBuffer, outputBufferNeedle.buffer)
             }
     
             // Process and overlay both outputs
@@ -608,11 +607,11 @@ class OverlayFragment : Fragment() {
 
                     // Calculate recommended needle trajectory
                     val nerveDepth = scaledTarget.second * scale
-                    val recInitCoord = if (insertionSideLeft) Pair(scaledTarget.first-(2/scale),0) else Pair(scaledTarget.first+(2/scale),0)    // 2cm from probe centerline
-                    val recLength = kotlin.math.sqrt(
+                    recInitCoord = if (insertionSideLeft) Pair((-2/scale).toInt(),0) else Pair((originalWidth+2/scale).toInt(),0)    // 2cm from edge of probe
+                    val recLength = kotlin.math.sqrt((
                         (scaledTarget.first - recInitCoord.first)*(scaledTarget.first - recInitCoord.first) +
                                 (scaledTarget.second - recInitCoord.second)*(scaledTarget.second - recInitCoord.second)
-                    ) * scale + 1 // 1cm extra
+                    ).toDouble()) * scale + 1 // 1cm extra
                     var recAngle = abs(Math.toDegrees(atan2(((recInitCoord.second - scaledTarget.second).toDouble()), (recInitCoord.first - scaledTarget.first).toDouble())))
                     if (recAngle>90) recAngle = 180-recAngle
                     val desiredInsertAngleButton: Button = view!!.findViewById(R.id.desiredInsertAngle)
