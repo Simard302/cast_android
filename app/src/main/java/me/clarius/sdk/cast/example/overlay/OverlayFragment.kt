@@ -546,7 +546,7 @@ class OverlayFragment : Fragment() {
             var ySum = 0
             var ySumCount = 0
             var needleInitCoord: Pair<Int, Int>? = null
-            var needleTipCoord: Pair<Int, Int>? = null
+            var needleTipCoord = Pair(-1,-1)
         
             for (x in 0 until modelDims.first) {
                 for (y in 0 until modelDims.second) {
@@ -566,10 +566,8 @@ class OverlayFragment : Fragment() {
 
                     // Find needle tip
                     if (showGPS && needleValue > 0.5) {
-                        if (needleTipCoord != null) {
-                            if (y > needleTipCoord.second) {
-                                needleTipCoord = Pair(x, y)
-                            }
+                        if (y > needleTipCoord.second) {
+                            needleTipCoord = Pair(x, y)
                         }
                         if (needleInitCoord == null) {
                             needleInitCoord = Pair(x, y)
