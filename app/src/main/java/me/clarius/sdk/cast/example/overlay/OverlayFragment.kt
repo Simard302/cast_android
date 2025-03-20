@@ -73,6 +73,10 @@ class OverlayFragment : Fragment() {
     private var lockGuide = false
     private var showGPS = true
 
+    private var nerveDepth: Double = 0.0
+    private var recLength: Double = 0.0
+    private var recAngle: Double = 0.0
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -529,6 +533,10 @@ class OverlayFragment : Fragment() {
             val originalWidth = originalImage.width
             val originalHeight = originalImage.height
             val scale = usDepth / originalHeight // cm to pixels
+
+            val desiredInsertAngleButton: Button = view!!.findViewById(R.id.desiredInsertAngle)
+            val desiredInsertLengthButton: Button = view!!.findViewById(R.id.desiredInsertLength)
+            val desiredInsertDepthButton: Button = view!!.findViewById(R.id.desiredInsertDepth)
         
             // Define mask colors
             val nerveColor = Color.argb(128, 255, 255, 0) // Nerve
@@ -592,7 +600,9 @@ class OverlayFragment : Fragment() {
                 val scaledNeedleMask = Bitmap.createScaledBitmap(needleBitmap, originalWidth, originalHeight, false)
                 canvas.drawBitmap(scaledNeedleMask, 0f, 0f, null)
             }
-                
+
+
+
             if (showGPS) {
                 if (!lockGuide) {
                     if (ySumCount == 0) {
@@ -604,21 +614,19 @@ class OverlayFragment : Fragment() {
                     scaledTarget = Pair((targetCoord.first * scaleX).toInt(), (targetCoord.second * scaleY).toInt())
 
                     // Calculate recommended needle trajectory
-                    val nerveDepth = scaledTarget.second * scale
+                    nerveDepth = scaledTarget.second * scale
                     recInitCoord = if (insertionSideLeft) Pair((-2/scale).toInt(),0) else Pair((originalWidth+2/scale).toInt(),0)    // 2cm from edge of probe
-                    val recLength = kotlin.math.sqrt((
+                    recLength = kotlin.math.sqrt((
                         (scaledTarget.first - recInitCoord.first)*(scaledTarget.first - recInitCoord.first) +
                                 (scaledTarget.second - recInitCoord.second)*(scaledTarget.second - recInitCoord.second)
                     ).toDouble()) * scale + 1 // 1cm extra
-                    var recAngle = abs(Math.toDegrees(atan2(((recInitCoord.second - scaledTarget.second).toDouble()), (recInitCoord.first - scaledTarget.first).toDouble())))
+                    recAngle = abs(Math.toDegrees(atan2(((recInitCoord.second - scaledTarget.second).toDouble()), (recInitCoord.first - scaledTarget.first).toDouble())))
                     if (recAngle>90) recAngle = 180-recAngle
-                    val desiredInsertAngleButton: Button = view!!.findViewById(R.id.desiredInsertAngle)
-                    val desiredInsertLengthButton: Button = view!!.findViewById(R.id.desiredInsertLength)
-                    val desiredInsertDepthButton: Button = view!!.findViewById(R.id.desiredInsertDepth)
+
                     desiredInsertAngleButton.text = "Recommended Needle Insertion:\n%.1f°".format(recAngle)
                     desiredInsertLengthButton.text = "Recommended Needle Length:\n≥%.1f cm".format(recLength)
                     desiredInsertDepthButton.text = "Nerve Depth:\n%.1f cm".format(nerveDepth)
-                    Log.d(TAG, "nerveDepth:$nerveDepth, recLength:$recLength, recAngle:$recAngle")
+//                    Log.d(TAG, "nerveDepth:$nerveDepth, recLength:$recLength, recAngle:$recAngle")
 
                     // Draw green rectangle between recInitCoord and targetCoord
                     canvas.drawLine(recInitCoord.first.toFloat(), recInitCoord.second.toFloat(), scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), Paint().apply {
@@ -632,7 +640,6 @@ class OverlayFragment : Fragment() {
                         style = Paint.Style.FILL
                     })
 
-//                    lockGuide = true
                 } else {
                     // Draw green rectangle between recInitCoord and targetCoord
                     canvas.drawLine(recInitCoord.first.toFloat(), recInitCoord.second.toFloat(), scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), Paint().apply {
@@ -665,13 +672,32 @@ class OverlayFragment : Fragment() {
                     var targetDistance = kotlin.math.sqrt(
                         (scaledTargetX - scaledNeedleTipX)*(scaledTargetX - scaledNeedleTipX) + (scaledTargetY - scaledNeedleTipY)*(scaledTargetY - scaledNeedleTipY)
                     ) * scale
-                    var currentAngle = Math.toDegrees(atan2(((scaledNeedleInitY - scaledTargetY).toDouble()), ((scaledNeedleInitX - scaledTargetX).toDouble())))
+                    var currentAngle = abs(Math.toDegrees(atan2(((scaledNeedleInitY - scaledTargetY).toDouble()), ((scaledNeedleInitX - scaledTargetX).toDouble()))))
+                    if (currentAngle>90) currentAngle = 180-currentAngle
                     var currentInsertion = kotlin.math.sqrt(
                         (scaledNeedleInitX - scaledNeedleTipX)*(scaledNeedleInitX - scaledNeedleTipX)
                                 + (scaledNeedleInitY - scaledNeedleTipY)*(scaledNeedleInitY - scaledNeedleTipY)
                     ) * scale
                     var currentDepth = scaledNeedleTipY * scale
-                    Log.d(TAG, "targetDistance:$targetDistance, currentAngle:$currentAngle, currentInsertion:$currentInsertion, currentDepth:$currentDepth")
+
+                    if (started) {
+                        desiredInsertAngleButton.text =
+                            "Desired Angle: %.1f°\nCurrent Angle: %.1f°".format(
+                                recAngle,
+                                currentAngle
+                            )
+                        desiredInsertLengthButton.text =
+                            "Needle Required: ≥%.1f cm\nCurrent Insertion: %.1f cm".format(
+                                recLength,
+                                currentInsertion
+                            )
+                        desiredInsertDepthButton.text =
+                            "Nerve Depth: %.1f cm\nCurrent Depth: %.1f cm".format(
+                                nerveDepth,
+                                currentDepth
+                            )
+                    }
+//                    Log.d(TAG, "targetDistance:$targetDistance, currentAngle:$currentAngle, currentInsertion:$currentInsertion, currentDepth:$currentDepth")
                 }
             }
         
