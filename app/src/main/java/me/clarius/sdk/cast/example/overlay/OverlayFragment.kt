@@ -92,14 +92,28 @@ class OverlayFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val imageView: ImageView = view.findViewById(R.id.ultrasound_image)
+        val startButton: Button = view.findViewById(R.id.btnStart)
+        val needleButton: LinearLayout = view.findViewById(R.id.btnNeedle)
+        val needleVisibility: ImageView = view.findViewById(R.id.needleVisibility)
+        val nerveButton: LinearLayout = view.findViewById(R.id.btnNerve)
+        val nerveVisibility: ImageView = view.findViewById(R.id.nerveVisibility)
+
         imageView.setOnClickListener {
             if (!displaying) {
                 startDisplaying()
                 // Set the image
+
+                needleVisibility.setImageResource(R.drawable.show)
+                needleButton.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.purple
+                    )
+                )
+                this.showNeedleOverlay = true
             }
         }
-
-        val startButton: Button = view.findViewById(R.id.btnStart)
+        
         startButton.setOnClickListener {
             if (displaying) {
                 if (this.started) {
@@ -118,6 +132,16 @@ class OverlayFragment : Fragment() {
                             R.color.red
                         )
                     )
+
+                    // Start nerve detection by default
+                    nerveVisibility.setImageResource(R.drawable.show)
+                    nerveButton.backgroundTintList = ColorStateList.valueOf(
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.purple
+                        )
+                    )
+                    this.showNerveOverlay = true
                 }
                 this.started = !this.started
                 lockGuide = !lockGuide
@@ -140,9 +164,6 @@ class OverlayFragment : Fragment() {
             this.insertionSideLeft = !this.insertionSideLeft
         }
 
-        val needleButton: LinearLayout = view.findViewById(R.id.btnNeedle)
-        val needleVisibility: ImageView = view.findViewById(R.id.needleVisibility)
-
         needleButton.setOnClickListener {
             if (this.showNeedleOverlay) {
                 needleVisibility.setImageResource(R.drawable.hide)
@@ -163,9 +184,6 @@ class OverlayFragment : Fragment() {
             }
             this.showNeedleOverlay = !this.showNeedleOverlay
         }
-
-        val nerveButton: LinearLayout = view.findViewById(R.id.btnNerve)
-        val nerveVisibility: ImageView = view.findViewById(R.id.nerveVisibility)
 
         nerveButton.setOnClickListener {
             if (this.showNerveOverlay) {
@@ -539,13 +557,10 @@ class OverlayFragment : Fragment() {
             val desiredInsertDepthButton: Button = view!!.findViewById(R.id.desiredInsertDepth)
         
             // Define mask colors
-            val nerveColor = Color.argb(128, 255, 255, 0) // Nerve
-            val needleColor = Color.argb(128, 127, 0, 255) // Needle
+            val nerveColor = Color.argb(128, 255, 255, 0)
+            val needleColor = Color.argb(128, 127, 0, 255)
             val markerColor = Color.BLUE
-            val guideColor = Color.argb(69,192,254,203)
-
-//            var showGPS = true  // TODO Integrate with UI
-//            var lockGuide = false
+            val guideColor = Color.argb(69, 192, 254, 203)
 
             // Variables for GPS calculations
             val centerX = modelDims.first / 2
