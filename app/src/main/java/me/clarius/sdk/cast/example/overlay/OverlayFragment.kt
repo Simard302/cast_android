@@ -477,6 +477,22 @@ class OverlayFragment : Fragment() {
         }
     }
 
+    private fun updateTopBar(recAngle: double, recLength: double, nerveDepth: double, needle: Boolean, currentAngle: double = 0.0, targetDistance: double = 0.0, currentDepth: double = 0.0) {
+        val desiredInsertAngleButton: Button = view!!.findViewById(R.id.desiredInsertAngle)
+        val desiredInsertLengthButton: Button = view!!.findViewById(R.id.desiredInsertLength)
+        val desiredInsertDepthButton: Button = view!!.findViewById(R.id.desiredInsertDepth)
+
+        if (!lockGuide) {
+            desiredInsertAngleButton.text = "Recommended Needle Insertion:\n%.1f°".format(recAngle)
+            desiredInsertLengthButton.text = "Recommended Needle Length:\n≥%.1f cm".format(recLength)
+            desiredInsertDepthButton.text = "Nerve Depth:\n%.1f cm".format(nerveDepth)
+        } else if (needle && started) {
+            desiredInsertAngleButton.text = "Recommended Angle: %.1f°\nCurrent Angle: %.1f°".format(recAngle, currentAngle)
+            desiredInsertLengthButton.text = "Distance to Target: %.1f cm".format(targetDistance)
+            desiredInsertDepthButton.text = "Nerve Depth: %.1f cm\nCurrent Depth: %.1f cm".format(nerveDepth, currentDepth)
+        }
+    }
+
     inner class TfModel {
         private var tfliteNerve: Interpreter? = null
         private var tfliteNeedle: Interpreter? = null
@@ -551,10 +567,6 @@ class OverlayFragment : Fragment() {
             val originalWidth = originalImage.width
             val originalHeight = originalImage.height
             val scale = usDepth / originalHeight // cm to pixels
-
-            val desiredInsertAngleButton: Button = view!!.findViewById(R.id.desiredInsertAngle)
-            val desiredInsertLengthButton: Button = view!!.findViewById(R.id.desiredInsertLength)
-            val desiredInsertDepthButton: Button = view!!.findViewById(R.id.desiredInsertDepth)
         
             // Define mask colors
             val nerveColor = Color.argb(128, 255, 255, 0)
@@ -564,8 +576,8 @@ class OverlayFragment : Fragment() {
 
             // Variables for GPS calculations
             val centerX = modelDims.first / 2
-            val xMin = (centerX * 0.9).toInt()
-            val xMax = (centerX * 1.1).toInt()
+            val xMin = (centerX * 0.8).toInt()  // Search for nerve in middle 20% region
+            val xMax = (centerX * 1.2).toInt()
             var ySum = 0
             var ySumCount = 0
             var needleInitCoord: Pair<Int, Int>? = null
@@ -577,11 +589,11 @@ class OverlayFragment : Fragment() {
                     val needleValue = outputNeedleBuffer.getFloatValue(index)
                     val nerveValue = outputNerveBuffer.getFloatValue(index)
 
-                    // TODO Adjust thresholds to use from training testing
+                    // TODO Adjust thresholds in models
                     needleBitmap.setPixel(x, y, if (needleValue > 0.5 && showNeedleOverlay) needleColor else Color.TRANSPARENT)
                     nerveBitmap.setPixel(x, y, if (nerveValue > 0.5 && showNerveOverlay) nerveColor else Color.TRANSPARENT)
 
-                    // Collect nerve region pixels within the 10% horizontal center
+                    // Collect nerve region pixels within the 20% horizontal center
                     if (!lockGuide && nerveValue > 0.5 && x in xMin..xMax) {
                         ySum += y
                         ySumCount++
@@ -616,8 +628,7 @@ class OverlayFragment : Fragment() {
                 canvas.drawBitmap(scaledNeedleMask, 0f, 0f, null)
             }
 
-
-
+            // GPS calculations for canvas
             if (showGPS) {
                 if (!lockGuide) {
                     if (ySumCount == 0) {
@@ -637,31 +648,24 @@ class OverlayFragment : Fragment() {
                     ).toDouble()) * scale + 1 // 1cm extra
                     recAngle = abs(Math.toDegrees(atan2(((recInitCoord.second - scaledTarget.second).toDouble()), (recInitCoord.first - scaledTarget.first).toDouble())))
                     if (recAngle>90) recAngle = 180-recAngle
-
-                    desiredInsertAngleButton.text = "Recommended Needle Insertion:\n%.1f°".format(recAngle)
-                    desiredInsertLengthButton.text = "Recommended Needle Length:\n≥%.1f cm".format(recLength)
-                    desiredInsertDepthButton.text = "Nerve Depth:\n%.1f cm".format(nerveDepth)
-//                    Log.d(TAG, "nerveDepth:$nerveDepth, recLength:$recLength, recAngle:$recAngle")
+                    //Log.d(TAG, "nerveDepth:$nerveDepth, recLength:$recLength, recAngle:$recAngle")
 
                     // Draw green rectangle between recInitCoord and targetCoord
                     canvas.drawLine(recInitCoord.first.toFloat(), recInitCoord.second.toFloat(), scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), Paint().apply {
                         color = guideColor
                         strokeWidth = 90f
                     })
-
                     // Mark targetCoord
                     canvas.drawCircle(scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), 3f, Paint().apply {
                         color = markerColor
                         style = Paint.Style.FILL
                     })
-
                 } else {
                     // Draw green rectangle between recInitCoord and targetCoord
                     canvas.drawLine(recInitCoord.first.toFloat(), recInitCoord.second.toFloat(), scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), Paint().apply {
                         color = guideColor
                         strokeWidth = 90f
                     })
-
                     // Mark targetCoord
                     canvas.drawCircle(scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), 3f, Paint().apply {
                         color = markerColor
@@ -669,13 +673,14 @@ class OverlayFragment : Fragment() {
                     })
                 }
 
-                // Scale coordinates to original image size
-                val scaledNeedleTipX = (needleTipCoord?.first ?: 0) * scaleX
-                val scaledNeedleTipY = (needleTipCoord?.second ?: 0) * scaleY
-                val scaledNeedleInitX = (needleInitCoord?.first ?: 0) * scaleX
-                val scaledNeedleInitY = (needleInitCoord?.second ?: 0) * scaleY
-
+                // Needle calculations
                 if (needleTipCoord != null) {
+                    // Scale coordinates to original image size
+                    val scaledNeedleTipX = (needleTipCoord?.first ?: 0) * scaleX
+                    val scaledNeedleTipY = (needleTipCoord?.second ?: 0) * scaleY
+                    val scaledNeedleInitX = (needleInitCoord?.first ?: 0) * scaleX
+                    val scaledNeedleInitY = (needleInitCoord?.second ?: 0) * scaleY
+
                     // Mark needleTipCoord
                     canvas.drawCircle(scaledNeedleTipX, scaledNeedleTipY, 3f, Paint().apply {
                         color = markerColor
@@ -689,30 +694,16 @@ class OverlayFragment : Fragment() {
                     ) * scale
                     var currentAngle = abs(Math.toDegrees(atan2(((scaledNeedleInitY - scaledTargetY).toDouble()), ((scaledNeedleInitX - scaledTargetX).toDouble()))))
                     if (currentAngle>90) currentAngle = 180-currentAngle
-                    var currentInsertion = kotlin.math.sqrt(
-                        (scaledNeedleInitX - scaledNeedleTipX)*(scaledNeedleInitX - scaledNeedleTipX)
-                                + (scaledNeedleInitY - scaledNeedleTipY)*(scaledNeedleInitY - scaledNeedleTipY)
-                    ) * scale
+                    // var currentInsertion = kotlin.math.sqrt(
+                    //     (scaledNeedleInitX - scaledNeedleTipX)*(scaledNeedleInitX - scaledNeedleTipX)
+                    //             + (scaledNeedleInitY - scaledNeedleTipY)*(scaledNeedleInitY - scaledNeedleTipY)
+                    // ) * scale
                     var currentDepth = scaledNeedleTipY * scale
+                    //Log.d(TAG, "targetDistance:$targetDistance, currentAngle:$currentAngle, currentInsertion:$currentInsertion, currentDepth:$currentDepth")
 
-                    if (started) {
-                        desiredInsertAngleButton.text =
-                            "Desired Angle: %.1f°\nCurrent Angle: %.1f°".format(
-                                recAngle,
-                                currentAngle
-                            )
-                        desiredInsertLengthButton.text =
-                            "Needle Required: ≥%.1f cm\nCurrent Insertion: %.1f cm".format(
-                                recLength,
-                                currentInsertion
-                            )
-                        desiredInsertDepthButton.text =
-                            "Nerve Depth: %.1f cm\nCurrent Depth: %.1f cm".format(
-                                nerveDepth,
-                                currentDepth
-                            )
-                    }
-//                    Log.d(TAG, "targetDistance:$targetDistance, currentAngle:$currentAngle, currentInsertion:$currentInsertion, currentDepth:$currentDepth")
+                    updateTopBar(recAngle, recLength, nerveDepth, true, currentAngle=currentAngle, targetDistance=targetDistance, currentDepth=currentDepth)
+                } else {
+                    updateTopBar(recAngle, recLength, nerveDepth, false)
                 }
             }
         
