@@ -77,6 +77,12 @@ class OverlayFragment : Fragment() {
     private var recLength: Double = 0.0
     private var recAngle: Double = 0.0
 
+    // Define mask colors
+    private val nerveColor = Color.argb(128, 255, 255, 0)
+    private val needleColor = Color.argb(128, 127, 0, 255)
+    private val markerColor = Color.BLUE
+    private val guideColor = Color.argb(69, 192, 254, 203)
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -267,6 +273,9 @@ class OverlayFragment : Fragment() {
                         )
                     }
                 }
+
+                // Redraw GPS
+                lockGuide = false   // TODO Verify working, re-lock
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?){
             }
@@ -490,6 +499,69 @@ class OverlayFragment : Fragment() {
             desiredInsertAngleButton.text = "Recommended Angle: %.1f°\nCurrent Angle: %.1f°".format(recAngle, currentAngle)
             desiredInsertLengthButton.text = "Distance to Target: %.1f cm".format(targetDistance)
             desiredInsertDepthButton.text = "Nerve Depth: %.1f cm\nCurrent Depth: %.1f cm".format(nerveDepth, currentDepth)
+
+            // Change colors based on values
+            if (targetDistance < 0.5) {
+                desiredInsertLengthButton.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.green
+                    )
+                )
+            } else {
+                desiredInsertLengthButton.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.yellow
+                    )
+                )
+            }
+
+            if (abs(currentDepth-nerveDepth) < 0.5) {
+                desiredInsertDepthButton.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.green
+                    )
+                )
+            } else if (currentDepth > nerveDepth) {
+                desiredInsertDepthButton.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.red
+                    )
+                )
+            } else {
+                desiredInsertDepthButton.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.yellow
+                    )
+                )
+            }
+
+            if (abs(currentAngle-recAngle) >= 10) {
+                desiredInsertAngleButton.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.red
+                    )
+                )
+            } else if (abs(currentAngle-recAngle) < 5) {
+                desiredInsertAngleButton.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.green
+                    )
+                )
+            } else {
+                desiredInsertAngleButton.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        R.color.yellow
+                    )
+                )
+            }
         }
     }
 
@@ -567,12 +639,6 @@ class OverlayFragment : Fragment() {
             val originalWidth = originalImage.width
             val originalHeight = originalImage.height
             val scale = usDepth / originalHeight // cm to pixels
-        
-            // Define mask colors
-            val nerveColor = Color.argb(128, 255, 255, 0)
-            val needleColor = Color.argb(128, 127, 0, 255)
-            val markerColor = Color.BLUE
-            val guideColor = Color.argb(69, 192, 254, 203)
 
             // Variables for GPS calculations
             val centerX = modelDims.first / 2
@@ -649,29 +715,18 @@ class OverlayFragment : Fragment() {
                     recAngle = abs(Math.toDegrees(atan2(((recInitCoord.second - scaledTarget.second).toDouble()), (recInitCoord.first - scaledTarget.first).toDouble())))
                     if (recAngle>90) recAngle = 180-recAngle
                     //Log.d(TAG, "nerveDepth:$nerveDepth, recLength:$recLength, recAngle:$recAngle")
-
-                    // Draw green rectangle between recInitCoord and targetCoord
-                    canvas.drawLine(recInitCoord.first.toFloat(), recInitCoord.second.toFloat(), scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), Paint().apply {
-                        color = guideColor
-                        strokeWidth = 90f
-                    })
-                    // Mark targetCoord
-                    canvas.drawCircle(scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), 3f, Paint().apply {
-                        color = markerColor
-                        style = Paint.Style.FILL
-                    })
-                } else {
-                    // Draw green rectangle between recInitCoord and targetCoord
-                    canvas.drawLine(recInitCoord.first.toFloat(), recInitCoord.second.toFloat(), scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), Paint().apply {
-                        color = guideColor
-                        strokeWidth = 90f
-                    })
-                    // Mark targetCoord
-                    canvas.drawCircle(scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), 3f, Paint().apply {
-                        color = markerColor
-                        style = Paint.Style.FILL
-                    })
                 }
+
+                // Draw green rectangle between recInitCoord and targetCoord
+                canvas.drawLine(recInitCoord.first.toFloat(), recInitCoord.second.toFloat(), scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), Paint().apply {
+                    color = guideColor
+                    strokeWidth = 90f
+                })
+                // Mark targetCoord
+                canvas.drawCircle(scaledTarget.first.toFloat(), scaledTarget.second.toFloat(), 3f, Paint().apply {
+                    color = markerColor
+                    style = Paint.Style.FILL
+                })
 
                 // Needle calculations
                 if (needleTipCoord != null) {
