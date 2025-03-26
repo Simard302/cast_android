@@ -486,22 +486,22 @@ class OverlayFragment : Fragment() {
         }
     }
 
-    private fun updateTopBar(recAngle: double, recLength: double, nerveDepth: double, needle: Boolean, currentAngle: double = 0.0, targetDistance: double = 0.0, currentDepth: double = 0.0) {
+    private fun updateTopBar(recAngle: Double, recLength: Double, nerveDepth: Double, needle: Boolean, currentAngle: Double = 0.0, targetDistance: Double = 0.0, currentDepth: Double = 0.0) {
         val desiredInsertAngleButton: Button = view!!.findViewById(R.id.desiredInsertAngle)
         val desiredInsertLengthButton: Button = view!!.findViewById(R.id.desiredInsertLength)
         val desiredInsertDepthButton: Button = view!!.findViewById(R.id.desiredInsertDepth)
 
-        if (!lockGuide) {
-            desiredInsertAngleButton.text = "Recommended Needle Insertion:\n%.1f°".format(recAngle)
-            desiredInsertLengthButton.text = "Recommended Needle Length:\n≥%.1f cm".format(recLength)
-            desiredInsertDepthButton.text = "Nerve Depth:\n%.1f cm".format(nerveDepth)
+        if (!lockGuide && !started) {
+            desiredInsertAngleButton.text = "Rec. Needle Insertion:\n%.1f°".format(recAngle)
+            desiredInsertLengthButton.text = "Rec. Needle Length:\n≥%.1f mm".format(recLength)
+            desiredInsertDepthButton.text = "Nerve Depth:\n%.1f mm".format(nerveDepth)
         } else if (needle && started) {
-            desiredInsertAngleButton.text = "Recommended Angle: %.1f°\nCurrent Angle: %.1f°".format(recAngle, currentAngle)
-            desiredInsertLengthButton.text = "Distance to Target: %.1f cm".format(targetDistance)
-            desiredInsertDepthButton.text = "Nerve Depth: %.1f cm\nCurrent Depth: %.1f cm".format(nerveDepth, currentDepth)
+            desiredInsertAngleButton.text = "Rec. Angle: %.1f°\nCurrent Angle: %.1f°".format(recAngle, currentAngle)
+            desiredInsertLengthButton.text = "Distance to Target:\n%.1f mm".format(targetDistance)
+            desiredInsertDepthButton.text = "Nerve Depth: %.1f mm\nCurrent Depth: %.1f mm".format(nerveDepth, currentDepth)
 
             // Change colors based on values
-            if (targetDistance < 0.5) {
+            if (targetDistance < 2) {
                 desiredInsertLengthButton.backgroundTintList = ColorStateList.valueOf(
                     ContextCompat.getColor(
                         requireContext(),
@@ -517,7 +517,7 @@ class OverlayFragment : Fragment() {
                 )
             }
 
-            if (abs(currentDepth-nerveDepth) < 0.5) {
+            if (abs(currentDepth-nerveDepth) < 2) {
                 desiredInsertDepthButton.backgroundTintList = ColorStateList.valueOf(
                     ContextCompat.getColor(
                         requireContext(),
@@ -729,10 +729,10 @@ class OverlayFragment : Fragment() {
                 })
 
                 // Needle calculations
-                if (needleTipCoord != null) {
+                if (needleTipCoord != Pair(-1,-1)) {
                     // Scale coordinates to original image size
-                    val scaledNeedleTipX = (needleTipCoord?.first ?: 0) * scaleX
-                    val scaledNeedleTipY = (needleTipCoord?.second ?: 0) * scaleY
+                    val scaledNeedleTipX = needleTipCoord.first * scaleX
+                    val scaledNeedleTipY = needleTipCoord.second * scaleY
                     val scaledNeedleInitX = (needleInitCoord?.first ?: 0) * scaleX
                     val scaledNeedleInitY = (needleInitCoord?.second ?: 0) * scaleY
 
@@ -756,9 +756,10 @@ class OverlayFragment : Fragment() {
                     var currentDepth = scaledNeedleTipY * scale
                     //Log.d(TAG, "targetDistance:$targetDistance, currentAngle:$currentAngle, currentInsertion:$currentInsertion, currentDepth:$currentDepth")
 
-                    updateTopBar(recAngle, recLength, nerveDepth, true, currentAngle=currentAngle, targetDistance=targetDistance, currentDepth=currentDepth)
+                    // display values in mm
+                    updateTopBar(recAngle, recLength*10, nerveDepth*10, true, currentAngle=currentAngle, targetDistance=targetDistance*10, currentDepth=currentDepth*10)
                 } else {
-                    updateTopBar(recAngle, recLength, nerveDepth, false)
+                    updateTopBar(recAngle, recLength*10, nerveDepth*10, false)
                 }
             }
         
