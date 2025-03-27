@@ -18,12 +18,12 @@
     <fragment
         android:id="@+id/overlayFragment"
         android:name="me.clarius.sdk.cast.example.overlay.OverlayFragment"
-        android:label="OverlayFragment"
+        android:label="NerveGPS"
         tools:layout="@layout/fragment_overlay">
-    <argument
-        android:name="procedure"
-        app:argType="string"
-        app:nullable="false" />
+        <argument
+            android:name="procedure"
+            app:argType="string"
+            app:nullable="false" />
         <action
             android:id="@+id/pair_device"
             app:destination="@id/fragment_pair" />
