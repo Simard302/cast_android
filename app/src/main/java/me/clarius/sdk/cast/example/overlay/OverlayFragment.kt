@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -37,7 +36,6 @@ import me.clarius.sdk.cast.example.clarius.CastService.CastBinder
 import me.clarius.sdk.cast.example.databinding.FragmentOverlayBinding
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.io.FileInputStream
 import java.io.IOException
@@ -49,7 +47,6 @@ import java.nio.charset.StandardCharsets
 import java.util.Optional
 import kotlin.math.abs
 import kotlin.math.atan2
-import kotlin.math.pow
 
 
 class OverlayFragment : Fragment() {
@@ -487,9 +484,9 @@ class OverlayFragment : Fragment() {
     }
 
     private fun updateTopBar(recAngle: Double, recLength: Double, nerveDepth: Double, needle: Boolean, currentAngle: Double = 0.0, targetDistance: Double = 0.0, currentDepth: Double = 0.0) {
-        val desiredInsertAngleButton: Button = view!!.findViewById(R.id.desiredInsertAngle)
-        val desiredInsertLengthButton: Button = view!!.findViewById(R.id.desiredInsertLength)
-        val desiredInsertDepthButton: Button = view!!.findViewById(R.id.desiredInsertDepth)
+        val desiredInsertAngleButton: Button = requireView().findViewById(R.id.desiredInsertAngle)
+        val desiredInsertLengthButton: Button = requireView().findViewById(R.id.desiredInsertLength)
+        val desiredInsertDepthButton: Button = requireView().findViewById(R.id.desiredInsertDepth)
 
         if (!lockGuide && !started) {
             desiredInsertAngleButton.text = "Rec. Needle Insertion:\n%.1f°".format(recAngle)
