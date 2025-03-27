@@ -109,14 +109,14 @@ class OverlayFragment : Fragment() {
                 startDisplaying()
                 // Set the image
 
-                needleVisibility.setImageResource(R.drawable.show)
-                needleButton.backgroundTintList = ColorStateList.valueOf(
+                nerveVisibility.setImageResource(R.drawable.show)
+                nerveButton.backgroundTintList = ColorStateList.valueOf(
                     ContextCompat.getColor(
                         requireContext(),
                         R.color.purple
                     )
                 )
-                this.showNeedleOverlay = true
+                this.showNerveOverlay = true
             }
         }
         
@@ -139,15 +139,15 @@ class OverlayFragment : Fragment() {
                         )
                     )
 
-                    // Start nerve detection by default
-                    nerveVisibility.setImageResource(R.drawable.show)
-                    nerveButton.backgroundTintList = ColorStateList.valueOf(
+                    // Start needle detection by default
+                    needleVisibility.setImageResource(R.drawable.show)
+                    needleButton.backgroundTintList = ColorStateList.valueOf(
                         ContextCompat.getColor(
                             requireContext(),
                             R.color.purple
                         )
                     )
-                    this.showNerveOverlay = true
+                    this.showNeedleOverlay = true
                 }
                 this.started = !this.started
                 lockGuide = !lockGuide
